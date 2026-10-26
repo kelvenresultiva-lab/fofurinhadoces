@@ -106,3 +106,21 @@ export function situacaoHistorica(
 export function aparecemNaListaFinanceira(parcela: ParcelaFinanceira, cancelados: Set<string>): boolean {
   return !(cancelados.has(parcela.contrato_id) && parcela.status !== 'cancelado' && saldoParcela(parcela) > 0)
 }
+
+// Situação financeira de um contrato para listagens (derivada, não existe coluna no banco).
+// Prioridade: cancelado > pago (nada em aberto) > em atraso (alguma parcela em aberto vencida)
+// > parcial (já recebeu algo e nada vencido) > em dia (nada recebido, nada vencido).
+// `abertas` são as parcelas em aberto DESSE contrato (parcelasEmAberto: vazio se cancelado).
+export type SituacaoContrato = 'pago' | 'em_dia' | 'parcial' | 'em_atraso' | 'cancelado'
+
+export function situacaoFinanceiraContrato(
+  statusContrato: string,
+  abertas: ParcelaFinanceira[],
+  recebido: number,
+  hoje: string = hojeISO()
+): SituacaoContrato {
+  if (statusContrato === 'cancelado') return 'cancelado'
+  if (abertas.length === 0) return 'pago'
+  if (abertas.some((p) => ehVencida(p.vencimento, saldoParcela(p), p.status, hoje))) return 'em_atraso'
+  return recebido > 0 ? 'parcial' : 'em_dia'
+}

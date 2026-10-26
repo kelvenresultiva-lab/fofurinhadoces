@@ -40,3 +40,34 @@ export function classesStatusParcela(status: string): string {
       return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
   }
 }
+
+// Situação financeira exibida na listagem de contratos (calculada em financeiro/calculos.ts).
+export function labelSituacaoContrato(situacao: string): string {
+  switch (situacao) {
+    case 'pago':
+      return 'Pago'
+    case 'parcial':
+      return 'Parcial'
+    case 'em_atraso':
+      return 'Em atraso'
+    case 'cancelado':
+      return 'Cancelado'
+    default:
+      return 'Em dia'
+  }
+}
+
+export function classesSituacaoContrato(situacao: string): string {
+  switch (situacao) {
+    case 'pago':
+      return 'bg-green-50 text-green-700'
+    case 'parcial':
+      return 'bg-amber-50 text-amber-700'
+    case 'em_atraso':
+      return 'bg-red-50 text-red-700'
+    case 'cancelado':
+      return 'bg-zinc-100 text-zinc-600'
+    default:
+      return 'bg-indigo-50 text-indigo-700'
+  }
+}
