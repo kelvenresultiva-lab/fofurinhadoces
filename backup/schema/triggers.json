@@ -1,0 +1,114 @@
+[
+  {
+    "trigger_name": "empresas_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "empresas",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "usuarios_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "usuarios",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "clientes_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "clientes",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "eventos_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "eventos",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "contratos_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "contratos",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "parcelas_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "parcelas",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "produtos_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "produtos",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "contrato_itens_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "contrato_itens",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "documentos_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "documentos",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "tarefas_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "tarefas",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "orcamentos_set_numero",
+    "event_manipulation": "INSERT",
+    "event_object_table": "orcamentos",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_orcamento_numero()"
+  },
+  {
+    "trigger_name": "orcamento_itens_recalcular_subtotal",
+    "event_manipulation": "INSERT",
+    "event_object_table": "orcamento_itens",
+    "action_timing": "AFTER",
+    "action_statement": "EXECUTE FUNCTION recalcular_subtotal_orcamento()"
+  },
+  {
+    "trigger_name": "orcamento_itens_recalcular_subtotal",
+    "event_manipulation": "DELETE",
+    "event_object_table": "orcamento_itens",
+    "action_timing": "AFTER",
+    "action_statement": "EXECUTE FUNCTION recalcular_subtotal_orcamento()"
+  },
+  {
+    "trigger_name": "orcamento_itens_recalcular_subtotal",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "orcamento_itens",
+    "action_timing": "AFTER",
+    "action_statement": "EXECUTE FUNCTION recalcular_subtotal_orcamento()"
+  },
+  {
+    "trigger_name": "orcamentos_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "orcamentos",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "orcamento_itens_set_updated_at",
+    "event_manipulation": "UPDATE",
+    "event_object_table": "orcamento_itens",
+    "action_timing": "BEFORE",
+    "action_statement": "EXECUTE FUNCTION set_updated_at()"
+  }
+]

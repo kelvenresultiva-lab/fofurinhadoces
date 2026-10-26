@@ -1,0 +1,182 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "empresas",
+    "policyname": "empresas_select_own",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(id = current_empresa_id())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "empresas",
+    "policyname": "empresas_update_own",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(id = current_empresa_id())",
+    "with_check": "(id = current_empresa_id())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "usuarios",
+    "policyname": "usuarios_select_same_empresa",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((id = auth.uid()) OR (empresa_id = current_empresa_id()))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "usuarios",
+    "policyname": "usuarios_update_self",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(id = auth.uid())",
+    "with_check": "(id = auth.uid())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "clientes",
+    "policyname": "clientes_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(empresa_id = current_empresa_id())",
+    "with_check": "(empresa_id = current_empresa_id())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "cliente_familiares",
+    "policyname": "cliente_familiares_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM clientes c\n  WHERE ((c.id = cliente_familiares.cliente_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM clientes c\n  WHERE ((c.id = cliente_familiares.cliente_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "eventos",
+    "policyname": "eventos_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM clientes c\n  WHERE ((c.id = eventos.cliente_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM clientes c\n  WHERE ((c.id = eventos.cliente_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contratos",
+    "policyname": "contratos_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM (eventos e\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((e.id = contratos.evento_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM (eventos e\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((e.id = contratos.evento_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "parcelas",
+    "policyname": "parcelas_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM ((contratos ct\n     JOIN eventos e ON ((e.id = ct.evento_id)))\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((ct.id = parcelas.contrato_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM ((contratos ct\n     JOIN eventos e ON ((e.id = ct.evento_id)))\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((ct.id = parcelas.contrato_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "recebimentos",
+    "policyname": "recebimentos_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM (((parcelas p\n     JOIN contratos ct ON ((ct.id = p.contrato_id)))\n     JOIN eventos e ON ((e.id = ct.evento_id)))\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((p.id = recebimentos.parcela_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM (((parcelas p\n     JOIN contratos ct ON ((ct.id = p.contrato_id)))\n     JOIN eventos e ON ((e.id = ct.evento_id)))\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((p.id = recebimentos.parcela_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "produtos",
+    "policyname": "produtos_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(empresa_id = current_empresa_id())",
+    "with_check": "(empresa_id = current_empresa_id())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contrato_itens",
+    "policyname": "contrato_itens_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM ((contratos ct\n     JOIN eventos e ON ((e.id = ct.evento_id)))\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((ct.id = contrato_itens.contrato_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM ((contratos ct\n     JOIN eventos e ON ((e.id = ct.evento_id)))\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((ct.id = contrato_itens.contrato_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documentos",
+    "policyname": "documentos_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM (eventos e\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((e.id = documentos.evento_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM (eventos e\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((e.id = documentos.evento_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tarefas",
+    "policyname": "tarefas_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(empresa_id = current_empresa_id())",
+    "with_check": "(empresa_id = current_empresa_id())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "observacoes",
+    "policyname": "observacoes_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM (eventos e\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((e.id = observacoes.evento_id) AND (c.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM (eventos e\n     JOIN clientes c ON ((c.id = e.cliente_id)))\n  WHERE ((e.id = observacoes.evento_id) AND (c.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "orcamentos",
+    "policyname": "orcamentos_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(empresa_id = current_empresa_id())",
+    "with_check": "(empresa_id = current_empresa_id())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "orcamento_itens",
+    "policyname": "orcamento_itens_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM orcamentos o\n  WHERE ((o.id = orcamento_itens.orcamento_id) AND (o.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM orcamentos o\n  WHERE ((o.id = orcamento_itens.orcamento_id) AND (o.empresa_id = current_empresa_id()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "orcamento_historico",
+    "policyname": "orcamento_historico_empresa_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM orcamentos o\n  WHERE ((o.id = orcamento_historico.orcamento_id) AND (o.empresa_id = current_empresa_id()))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM orcamentos o\n  WHERE ((o.id = orcamento_historico.orcamento_id) AND (o.empresa_id = current_empresa_id()))))"
+  }
+]

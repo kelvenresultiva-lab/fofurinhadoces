@@ -1,0 +1,146 @@
+[
+  {
+    "name": "gtrgm_out",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_out(gtrgm)\n RETURNS cstring\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_out$function$\n"
+  },
+  {
+    "name": "gtrgm_consistent",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_consistent(internal, text, smallint, oid, internal)\n RETURNS boolean\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_consistent$function$\n"
+  },
+  {
+    "name": "gtrgm_distance",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_distance(internal, text, smallint, oid, internal)\n RETURNS double precision\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_distance$function$\n"
+  },
+  {
+    "name": "gtrgm_compress",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_compress(internal)\n RETURNS internal\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_compress$function$\n"
+  },
+  {
+    "name": "gtrgm_decompress",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_decompress(internal)\n RETURNS internal\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_decompress$function$\n"
+  },
+  {
+    "name": "gtrgm_penalty",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_penalty(internal, internal, internal)\n RETURNS internal\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_penalty$function$\n"
+  },
+  {
+    "name": "gtrgm_picksplit",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_picksplit(internal, internal)\n RETURNS internal\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_picksplit$function$\n"
+  },
+  {
+    "name": "gtrgm_union",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_union(internal, internal)\n RETURNS gtrgm\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_union$function$\n"
+  },
+  {
+    "name": "gtrgm_same",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_same(gtrgm, gtrgm, internal)\n RETURNS internal\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_same$function$\n"
+  },
+  {
+    "name": "gin_extract_value_trgm",
+    "definition": "CREATE OR REPLACE FUNCTION public.gin_extract_value_trgm(text, internal)\n RETURNS internal\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gin_extract_value_trgm$function$\n"
+  },
+  {
+    "name": "gin_extract_query_trgm",
+    "definition": "CREATE OR REPLACE FUNCTION public.gin_extract_query_trgm(text, internal, smallint, internal, internal, internal, internal)\n RETURNS internal\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gin_extract_query_trgm$function$\n"
+  },
+  {
+    "name": "gin_trgm_consistent",
+    "definition": "CREATE OR REPLACE FUNCTION public.gin_trgm_consistent(internal, smallint, text, integer, internal, internal, internal, internal)\n RETURNS boolean\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gin_trgm_consistent$function$\n"
+  },
+  {
+    "name": "gin_trgm_triconsistent",
+    "definition": "CREATE OR REPLACE FUNCTION public.gin_trgm_triconsistent(internal, smallint, text, integer, internal, internal, internal)\n RETURNS \"char\"\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gin_trgm_triconsistent$function$\n"
+  },
+  {
+    "name": "strict_word_similarity",
+    "definition": "CREATE OR REPLACE FUNCTION public.strict_word_similarity(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$strict_word_similarity$function$\n"
+  },
+  {
+    "name": "strict_word_similarity_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.strict_word_similarity_op(text, text)\n RETURNS boolean\n LANGUAGE c\n STABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$strict_word_similarity_op$function$\n"
+  },
+  {
+    "name": "strict_word_similarity_commutator_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.strict_word_similarity_commutator_op(text, text)\n RETURNS boolean\n LANGUAGE c\n STABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$strict_word_similarity_commutator_op$function$\n"
+  },
+  {
+    "name": "strict_word_similarity_dist_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.strict_word_similarity_dist_op(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$strict_word_similarity_dist_op$function$\n"
+  },
+  {
+    "name": "strict_word_similarity_dist_commutator_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.strict_word_similarity_dist_commutator_op(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$strict_word_similarity_dist_commutator_op$function$\n"
+  },
+  {
+    "name": "gtrgm_options",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_options(internal)\n RETURNS void\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE\nAS '$libdir/pg_trgm', $function$gtrgm_options$function$\n"
+  },
+  {
+    "name": "word_similarity_dist_commutator_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.word_similarity_dist_commutator_op(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$word_similarity_dist_commutator_op$function$\n"
+  },
+  {
+    "name": "gtrgm_in",
+    "definition": "CREATE OR REPLACE FUNCTION public.gtrgm_in(cstring)\n RETURNS gtrgm\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$gtrgm_in$function$\n"
+  },
+  {
+    "name": "current_empresa_id",
+    "definition": "CREATE OR REPLACE FUNCTION public.current_empresa_id()\n RETURNS uuid\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\n  select empresa_id from public.usuarios where id = auth.uid()\r\n$function$\n"
+  },
+  {
+    "name": "set_updated_at",
+    "definition": "CREATE OR REPLACE FUNCTION public.set_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  new.updated_at = now();\r\n  return new;\r\nend;\r\n$function$\n"
+  },
+  {
+    "name": "set_limit",
+    "definition": "CREATE OR REPLACE FUNCTION public.set_limit(real)\n RETURNS real\n LANGUAGE c\n STRICT\nAS '$libdir/pg_trgm', $function$set_limit$function$\n"
+  },
+  {
+    "name": "show_limit",
+    "definition": "CREATE OR REPLACE FUNCTION public.show_limit()\n RETURNS real\n LANGUAGE c\n STABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$show_limit$function$\n"
+  },
+  {
+    "name": "show_trgm",
+    "definition": "CREATE OR REPLACE FUNCTION public.show_trgm(text)\n RETURNS text[]\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$show_trgm$function$\n"
+  },
+  {
+    "name": "similarity",
+    "definition": "CREATE OR REPLACE FUNCTION public.similarity(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$similarity$function$\n"
+  },
+  {
+    "name": "similarity_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.similarity_op(text, text)\n RETURNS boolean\n LANGUAGE c\n STABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$similarity_op$function$\n"
+  },
+  {
+    "name": "word_similarity",
+    "definition": "CREATE OR REPLACE FUNCTION public.word_similarity(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$word_similarity$function$\n"
+  },
+  {
+    "name": "word_similarity_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.word_similarity_op(text, text)\n RETURNS boolean\n LANGUAGE c\n STABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$word_similarity_op$function$\n"
+  },
+  {
+    "name": "word_similarity_commutator_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.word_similarity_commutator_op(text, text)\n RETURNS boolean\n LANGUAGE c\n STABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$word_similarity_commutator_op$function$\n"
+  },
+  {
+    "name": "similarity_dist",
+    "definition": "CREATE OR REPLACE FUNCTION public.similarity_dist(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$similarity_dist$function$\n"
+  },
+  {
+    "name": "word_similarity_dist_op",
+    "definition": "CREATE OR REPLACE FUNCTION public.word_similarity_dist_op(text, text)\n RETURNS real\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pg_trgm', $function$word_similarity_dist_op$function$\n"
+  },
+  {
+    "name": "set_orcamento_numero",
+    "definition": "CREATE OR REPLACE FUNCTION public.set_orcamento_numero()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  if new.numero is null then\r\n    select coalesce(max(numero), 0) + 1 into new.numero\r\n    from public.orcamentos\r\n    where empresa_id = new.empresa_id;\r\n  end if;\r\n  return new;\r\nend;\r\n$function$\n"
+  },
+  {
+    "name": "recalcular_subtotal_orcamento",
+    "definition": "CREATE OR REPLACE FUNCTION public.recalcular_subtotal_orcamento()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  target_id uuid;\r\nbegin\r\n  target_id := coalesce(new.orcamento_id, old.orcamento_id);\r\n  update public.orcamentos\r\n  set subtotal = coalesce((\r\n    select sum(subtotal) from public.orcamento_itens where orcamento_id = target_id\r\n  ), 0)\r\n  where id = target_id;\r\n  return null;\r\nend;\r\n$function$\n"
+  },
+  {
+    "name": "converter_orcamento_em_contrato",
+    "definition": "CREATE OR REPLACE FUNCTION public.converter_orcamento_em_contrato(p_orcamento_id uuid, p_entrada numeric DEFAULT 0, p_data_entrada date DEFAULT NULL::date, p_numero_parcelas integer DEFAULT 1, p_primeiro_vencimento date DEFAULT NULL::date)\n RETURNS uuid\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  v_orcamento record;\r\n  v_contrato_id uuid;\r\n  v_restante numeric(12,2);\r\n  v_base numeric(12,2);\r\n  v_soma_base numeric(12,2) := 0;\r\n  v_numero integer := 1;\r\n  v_valor numeric(12,2);\r\n  i integer;\r\nbegin\r\n  if p_numero_parcelas < 1 then\r\n    p_numero_parcelas := 1;\r\n  end if;\r\n\r\n  select * into v_orcamento from public.orcamentos where id = p_orcamento_id for update;\r\n\r\n  if v_orcamento is null then\r\n    raise exception 'Orçamento não encontrado.';\r\n  end if;\r\n\r\n  if v_orcamento.status != 'aprovado' then\r\n    raise exception 'Apenas orçamentos aprovados podem virar contrato.';\r\n  end if;\r\n\r\n  if exists (select 1 from public.contratos where evento_id = v_orcamento.evento_id) then\r\n    raise exception 'Este evento já possui um contrato. Não é possível criar um segundo contrato.';\r\n  end if;\r\n\r\n  if p_primeiro_vencimento is null then\r\n    raise exception 'Informe o vencimento da primeira parcela.';\r\n  end if;\r\n\r\n  insert into public.contratos (evento_id, valor_total, desconto, observacoes)\r\n  values (\r\n    v_orcamento.evento_id,\r\n    v_orcamento.subtotal,\r\n    v_orcamento.subtotal - v_orcamento.valor_total,\r\n    v_orcamento.observacoes\r\n  )\r\n  returning id into v_contrato_id;\r\n\r\n  insert into public.contrato_itens (contrato_id, produto_id, quantidade, valor_unitario)\r\n  select v_contrato_id, produto_id, quantidade, valor_unitario\r\n  from public.orcamento_itens\r\n  where orcamento_id = p_orcamento_id;\r\n\r\n  v_restante := greatest(v_orcamento.valor_total - p_entrada, 0);\r\n  v_base := floor((v_restante / p_numero_parcelas) * 100) / 100;\r\n\r\n  if p_entrada > 0 then\r\n    insert into public.parcelas (contrato_id, numero, descricao, vencimento, valor)\r\n    values (v_contrato_id, v_numero, 'Entrada', coalesce(p_data_entrada, p_primeiro_vencimento), p_entrada);\r\n    v_numero := v_numero + 1;\r\n  end if;\r\n\r\n  for i in 0..(p_numero_parcelas - 1) loop\r\n    if i = p_numero_parcelas - 1 then\r\n      v_valor := round((v_restante - v_soma_base)::numeric, 2);\r\n    else\r\n      v_valor := v_base;\r\n    end if;\r\n    v_soma_base := v_soma_base + v_base;\r\n\r\n    insert into public.parcelas (contrato_id, numero, descricao, vencimento, valor)\r\n    values (\r\n      v_contrato_id,\r\n      v_numero + i,\r\n      format('Parcela %s/%s', i + 1, p_numero_parcelas),\r\n      (p_primeiro_vencimento + (i || ' months')::interval)::date,\r\n      v_valor\r\n    );\r\n  end loop;\r\n\r\n  update public.orcamentos\r\n  set contrato_id = v_contrato_id\r\n  where id = p_orcamento_id;\r\n\r\n  insert into public.orcamento_historico (orcamento_id, usuario_id, texto)\r\n  values (p_orcamento_id, auth.uid(), 'Convertido em contrato.');\r\n\r\n  return v_contrato_id;\r\nend;\r\n$function$\n"
+  }
+]

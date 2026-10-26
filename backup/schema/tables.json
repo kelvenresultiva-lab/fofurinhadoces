@@ -1,0 +1,1478 @@
+{
+  "cliente_familiares": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cliente_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "nome",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "parentesco",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "telefone",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "whatsapp",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "instagram",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "aniversario",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "observacoes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "cliente_id",
+        "foreign_table": "clientes",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "clientes": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "empresa_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "current_empresa_id()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "nome",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cpf",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "telefone",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "whatsapp",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "instagram",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "data_nascimento",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "endereco",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cidade",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "estado",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cep",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "origem",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "profissao",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "observacoes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'ativo'::text",
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "empresa_id",
+        "foreign_table": "empresas",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "contrato_itens": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "contrato_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "produto_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "quantidade",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor_unitario",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "subtotal",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status_producao",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'nao_iniciado'::text",
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "contrato_id",
+        "foreign_table": "contratos",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "produto_id",
+        "foreign_table": "produtos",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "contratos": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "evento_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor_total",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "desconto",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor_final",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'ativo'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "observacoes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "evento_id",
+        "foreign_table": "eventos",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "documentos": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "evento_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "usuario_upload_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "categoria",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'outros'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "nome",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "tipo",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "caminho",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "tamanho",
+        "data_type": "bigint",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'ativo'::text",
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "evento_id",
+        "foreign_table": "eventos",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "usuario_upload_id",
+        "foreign_table": "usuarios",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "empresas": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "nome",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "nome_fantasia",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cnpj",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "telefone",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "logo",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "site",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "instagram",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "endereco",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cidade",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "estado",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cep",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "plano",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'gratis'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'ativo'::text",
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": []
+  },
+  "eventos": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cliente_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "tipo",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'casamento'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "titulo",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "data",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "horario",
+        "data_type": "time without time zone",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "local",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cidade",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "numero_convidados",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'planejado'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "observacoes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "cliente_id",
+        "foreign_table": "clientes",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "observacoes": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "evento_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "usuario_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "texto",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "evento_id",
+        "foreign_table": "eventos",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "usuario_id",
+        "foreign_table": "usuarios",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "orcamento_historico": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "orcamento_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "usuario_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "texto",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "orcamento_id",
+        "foreign_table": "orcamentos",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "usuario_id",
+        "foreign_table": "usuarios",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "orcamento_itens": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "orcamento_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "produto_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "quantidade",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor_unitario",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "subtotal",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "orcamento_id",
+        "foreign_table": "orcamentos",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "produto_id",
+        "foreign_table": "produtos",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "orcamentos": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "empresa_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "current_empresa_id()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cliente_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "evento_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "contrato_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "numero",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'rascunho'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "subtotal",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "desconto_tipo",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'valor'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "desconto_valor",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor_total",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "data_emissao",
+        "data_type": "date",
+        "is_nullable": "NO",
+        "column_default": "CURRENT_DATE",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "data_validade",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "observacoes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "deleted_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "cliente_id",
+        "foreign_table": "clientes",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "contrato_id",
+        "foreign_table": "contratos",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "empresa_id",
+        "foreign_table": "empresas",
+        "foreign_column": "id"
+      },
+      {
+        "column_name": "evento_id",
+        "foreign_table": "eventos",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "parcelas": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "contrato_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "numero",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "descricao",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "vencimento",
+        "data_type": "date",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor_pago",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'pendente'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "forma_pagamento",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "contrato_id",
+        "foreign_table": "contratos",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "produtos": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "empresa_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "current_empresa_id()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "nome",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "categoria",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "unidade",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'unidade'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "preco",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "dias_antecedencia_producao",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "2",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "ativo",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "true",
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "empresa_id",
+        "foreign_table": "empresas",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "recebimentos": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "parcela_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "valor",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "data",
+        "data_type": "date",
+        "is_nullable": "NO",
+        "column_default": "CURRENT_DATE",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "forma_pagamento",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "observacoes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "parcela_id",
+        "foreign_table": "parcelas",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "tarefas": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "empresa_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "current_empresa_id()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "titulo",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "descricao",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "responsavel",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "data",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "hora",
+        "data_type": "time without time zone",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "prioridade",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'normal'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'pendente'::text",
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "empresa_id",
+        "foreign_table": "empresas",
+        "foreign_column": "id"
+      }
+    ]
+  },
+  "usuarios": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "empresa_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "nome",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "telefone",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "cargo",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'administrador'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "foto",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'ativo'::text",
+        "character_maximum_length": null
+      },
+      {
+        "column_name": "ultimo_login",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ],
+    "foreignKeys": [
+      {
+        "column_name": "empresa_id",
+        "foreign_table": "empresas",
+        "foreign_column": "id"
+      }
+    ]
+  }
+}

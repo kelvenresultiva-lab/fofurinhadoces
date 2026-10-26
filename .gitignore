@@ -1,0 +1,24 @@
+# Dependências e build
+node_modules/
+.next/
+*.log
+
+# Segredos (chaves do Supabase, senha do banco) — nunca versionar
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+.vercel/
+*.tsbuildinfo
+
+# Dados exportados do projeto original (contêm dados pessoais de clientes)
+backup/data/
+backup/storage/
+
+# Repositório aninhado com export antigo de schema
+fofurinhadoces/
+
+# Configuração local de ferramentas
+.claude/settings.local.json
