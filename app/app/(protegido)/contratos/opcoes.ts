@@ -71,3 +71,18 @@ export function classesSituacaoContrato(situacao: string): string {
       return 'bg-indigo-50 text-indigo-700'
   }
 }
+
+export const FORMAS_PAGAMENTO = [
+  { value: 'pix', label: 'Pix' },
+  { value: 'dinheiro', label: 'Dinheiro' },
+  { value: 'cartao_credito', label: 'Cartão de crédito' },
+  { value: 'cartao_debito', label: 'Cartão de débito' },
+  { value: 'transferencia', label: 'Transferência' },
+  { value: 'cheque', label: 'Cheque' },
+  { value: 'boleto', label: 'Boleto' },
+  { value: 'outros', label: 'Outros' },
+] as const
+
+export function labelFormaPagamento(forma: string): string {
+  return FORMAS_PAGAMENTO.find((f) => f.value === forma)?.label ?? forma
+}

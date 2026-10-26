@@ -196,10 +196,12 @@ async function verificar() {
   console.log('== 4. Histórico de recebimentos de contratos cancelados ==');
   const pKE = textoDe(await get(`/contratos/${ids.KE.id}`));
   const pKF = textoDe(await get(`/contratos/${ids.KF.id}`));
+  const pKEPag = textoDe(await get(`/contratos/${ids.KE.id}?aba=pagamentos`));
+  const pKFPag = textoDe(await get(`/contratos/${ids.KF.id}?aba=pagamentos`));
   confere('KE (cancelado): página do contrato mostra "Histórico de recebimentos" com R$ 100,00 e a data do pagamento',
-    recKE.length === 1 && pKE.includes('Histórico de recebimentos') && pKE.includes(`R$ 100,00 — ${dataBR(recKE[0].d)}`));
+    recKE.length === 1 && pKEPag.includes('Histórico de recebimentos') && pKEPag.includes(`${dataBR(recKE[0].d)} Parcela 1/2 R$ 100,00`) && pKE.includes(`R$ 100,00 — ${dataBR(recKE[0].d)}`));
   confere('KF (cancelado): página do contrato mostra "Histórico de recebimentos" com R$ 40,00 e a data do pagamento',
-    recKF.length === 1 && pKF.includes('Histórico de recebimentos') && pKF.includes(`R$ 40,00 — ${dataBR(recKF[0].d)}`));
+    recKF.length === 1 && pKFPag.includes('Histórico de recebimentos') && pKFPag.includes(`${dataBR(recKF[0].d)} Parcela 1/2 R$ 40,00`) && pKF.includes(`R$ 40,00 — ${dataBR(recKF[0].d)}`));
   confere('Recebido (Financeiro e Dashboard) continua incluindo os 140,00 desses contratos (220 total)', igual(fin.recebido, 220) && igual(dash.mes.resumoRecebido, 220));
 
   if (falhas.length) { console.error(`\n${falhas.length} VERIFICAÇÃO(ÕES) COM FALHA`); process.exit(1); }

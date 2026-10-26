@@ -41,3 +41,11 @@ export function formatarDataHoraBR(instante: string | null | undefined): string 
   const p = (tipo: string) => partes.find((x) => x.type === tipo)?.value ?? ''
   return `${p('day')}/${p('month')}/${p('year')} às ${p('hour')}:${p('minute')}`
 }
+
+// Dias corridos entre duas datas civis AAAA-MM-DD (positivo se `ate` é depois de `de`).
+// Aritmética em UTC só como calendário, sem fuso, então o dia nunca desloca.
+export function diasEntre(de: string, ate: string): number {
+  const [a1, m1, d1] = de.split('-').map(Number)
+  const [a2, m2, d2] = ate.split('-').map(Number)
+  return Math.round((Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86400000)
+}

@@ -206,7 +206,7 @@ async function verificar() {
   const p = (t) => quando.find((x) => x.type === t).value;
   confere('16a. mostra "Contrato cancelado", a data e hora do cancelamento, o motivo e o NOME do responsável', tDep.includes('Contrato cancelado') && tDep.includes(`Cancelado em ${p('day')}/${p('month')}/${p('year')} às ${p('hour')}:${p('minute')}`) && tDep.includes('Motivo Cliente desistiu do evento') && tDep.includes(`Cancelado por ${NOME_A}`), tDep.slice(tDep.indexOf('Contrato cancelado'), tDep.indexOf('Contrato cancelado') + 300));
   confere('16b. não mostra mais a ação de cancelar nem o modal, nem formulário de recebimento', !tDep.includes('Cancelar contrato') && !tDep.includes('Confirmar cancelamento') && !htmlDep.includes('name="confirmacao"') && !tDep.includes('Registrar recebimento'));
-  confere('16c. mantém a visão histórica: valor original, recebido 140,00, histórico de recebimentos e parcelas "Cancelada com o contrato"', tDep.includes('Valor original') && tDep.includes('Recebido R$ 140,00') && contar(tDep, 'Histórico de recebimentos') === 2 && tDep.includes('Cancelada com o contrato') && !tDep.includes('Próxima parcela') && !/Em atraso/.test(tDep));
+  confere('16c. mantém a visão histórica: valor original, recebido 140,00, histórico de recebimentos e parcelas "Cancelada com o contrato"', tDep.includes('Valor original') && tDep.includes('Recebido R$ 140,00') && tDep.includes('R$ 100,00 —') && tDep.includes('R$ 40,00 —') && tDep.includes('Cancelada com o contrato') && !tDep.includes('Próxima parcela') && !/Em atraso/.test(tDep));
   const pagB = await getB_raw(A, B, ids.K1);
   confere('16d. a empresa B continua sem acesso à página do contrato cancelado da A (404)', pagB);
 

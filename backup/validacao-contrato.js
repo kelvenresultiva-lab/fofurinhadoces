@@ -124,25 +124,27 @@ async function verificar() {
   const getA = await abrirSessao(A.email);
   const htmlAtivo = await getA(`/contratos/${ids.ativo.id}`);
   const htmlCanc = await getA(`/contratos/${ids.cancelado.id}`);
+  const tCResumo = textoDe(await getA(`/contratos/${ids.cancelado.id}?aba=resumo`)); // itens contratados
+  const tCPagamentos = textoDe(await getA(`/contratos/${ids.cancelado.id}?aba=pagamentos`)); // histórico de recebimentos
   const tA = textoDe(htmlAtivo);
   const tC = textoDe(htmlCanc);
   const lA = linhasDeParcelas(htmlAtivo);
   const lC = linhasDeParcelas(htmlCanc);
 
   console.log('== 1. Contrato ATIVO mantém todos os recursos ==');
-  confere('mostra valor total, entrada e vencimento final', ['Valor total', 'Entrada', 'Parcelas', 'Vencimento final'].every((x) => tA.includes(x)));
-  confere('Financeiro: valor contratado 300,00, recebido 40,00 e saldo 260,00', tA.includes('Valor contratado R$ 300,00') && tA.includes('Recebido R$ 40,00') && tA.includes('Saldo R$ 260,00'));
-  confere('resumo: A receber 260,00 e Em atraso 160,00 (60 da parcial + 100 da pendente vencida)', tA.includes('A receber R$ 260,00') && tA.includes('Em atraso R$ 160,00'));
-  confere('próxima parcela = parcela 1 (parcial, saldo 60,00) marcada como Vencida', tA.includes('Próxima parcela') && tA.includes(`${dataBR(venc[0].v)} Vencida`) && tA.includes('R$ 60,00'));
-  confere('parcelas 1 e 2 aparecem como Vencida e a 3 como Pendente; coluna Saldo presente', /Vencida/.test(lA[1] ?? '') && /Vencida/.test(lA[2] ?? '') && /Pendente/.test(lA[3] ?? '') && /<th[^>]*>Saldo<\/th>/.test(htmlAtivo));
-  confere('registro de recebimento disponível nas 3 parcelas (3 botões "Confirmar recebimento")', contar(tA, 'Confirmar recebimento') === 3 && ['1', '2', '3'].every((n) => (lA[n] ?? '').includes('Registrar recebimento')));
+  confere('mostra valor total, entrada e vencimento final', ['Valor total R$ 300,00', 'Entrada', 'Parcelado 3x de R$ 100,00', 'Vencimento final', 'Resumo', 'Pagamentos', 'Observações'].every((x) => tA.includes(x)));
+  confere('resumo do contrato: recebido 40,00 e ação "Cancelar contrato" disponível', tA.includes('Recebido R$ 40,00') && tA.includes('Valor recebido R$ 40,00') && tA.includes('Cancelar contrato'));
+  confere('resumo: A receber 100,00 (parcela a vencer) e Em atraso 160,00 (60 da parcial + 100 da pendente vencida)', tA.includes('A receber R$ 100,00') && tA.includes('Em atraso R$ 160,00'));
+  confere('próxima parcela = parcela 1 (parcial, saldo 60,00) com "Venceu há N dias"; previsão com a parcela 3', tA.includes('Próxima parcela') && tA.includes(`${dataBR(venc[0].v)} Venceu há`) && tA.includes('Parcela 1/3 R$ 60,00') && tA.includes('Previsão de recebimentos') && tA.includes('Total a receber R$ 100,00'));
+  confere('parcelas 1 e 2 aparecem como Em atraso (com dias de atraso) e a 3 como Pendente', /Em atraso/.test(lA[1] ?? '') && /dias em atraso/.test(lA[1] ?? '') && /Em atraso/.test(lA[2] ?? '') && /Pendente/.test(lA[3] ?? ''));
+  confere('registro de pagamento disponível nas 3 parcelas, no cabeçalho e na próxima parcela (modal com forma de pagamento)', ['1', '2', '3'].every((n) => (lA[n] ?? '').includes('Registrar pagamento')) && tA.includes('Receber pagamento') && contar(tA, 'Confirmar pagamento') >= 5 && htmlAtivo.includes('name="forma_pagamento"'));
   confere('histórico de pagamentos da parcela 1 (R$ 40,00 — data — Pix)', (lA[1] ?? '').includes(`R$ 40,00 — ${dataBR(recAtivo[0].d)} — Pix`));
   confere('linha do tempo presente e sem aviso de cancelamento', tA.includes('Linha do tempo') && !tA.includes('Contrato cancelado') && !tA.includes('Cancelada com o contrato'));
 
   console.log('== 2. Contrato CANCELADO mostra o aviso ==');
   confere('destaque "Contrato cancelado" (alerta) + selo de status Cancelado', htmlCanc.includes('role="alert"') && tC.includes('Contrato cancelado') && /rounded-full[^>]*>\s*Cancelado\s*</.test(htmlCanc));
   confere('mostra dados do contrato: cliente, evento, valor original 400,00, parcelas originais, itens contratados',
-    tC.includes('Cliente Contrato Cancelado') && tC.includes('Casamento') && tC.includes('Valor original R$ 400,00') && tC.includes('Parcelas originais 4') && tC.includes('Itens contratados') && tC.includes('Produto Contrato TESTE'));
+    tC.includes('Cliente Contrato Cancelado') && tC.includes('Casamento') && tC.includes('Valor original R$ 400,00') && tC.includes('Parcelas originais 4') && tCResumo.includes('Itens contratados') && tCResumo.includes('Produto Contrato TESTE'));
 
   console.log('== 3. Sem próxima parcela ==');
   confere('não mostra "Próxima parcela" nem a mensagem de parcela em aberto', !tC.includes('Próxima parcela') && !tC.includes('Nenhuma parcela em aberto'));
@@ -169,15 +171,15 @@ async function verificar() {
 
   console.log('== 7. Recebimentos históricos visíveis ==');
   confere('recebido 140,00 no Financeiro e no resumo; valor original 400,00 no resumo', tC.includes('Recebido R$ 140,00') && contar(tC, 'R$ 140,00') >= 2 && tC.includes('Valor original R$ 400,00'));
-  confere('histórico da parcela 1: R$ 100,00 — data — Pix', recCanc.length === 2 && (lC[1] ?? '').includes('Histórico de recebimentos') && (lC[1] ?? '').includes(`R$ 100,00 — ${dataBR(recCanc[0].d)} — Pix`));
-  confere('histórico da parcela 2 (pagamento parcial): R$ 40,00 — data — Dinheiro', (lC[2] ?? '').includes('Histórico de recebimentos') && (lC[2] ?? '').includes(`R$ 40,00 — ${dataBR(recCanc[1].d)} — Dinheiro`));
+  confere('histórico da parcela 1: R$ 100,00 — data — Pix (na linha da parcela e na aba Pagamentos)', recCanc.length === 2 && (lC[1] ?? '').includes(`R$ 100,00 — ${dataBR(recCanc[0].d)} — Pix`) && tCPagamentos.includes('Histórico de recebimentos') && tCPagamentos.includes(`${dataBR(recCanc[0].d)} Parcela 1/4 R$ 100,00 Pix`));
+  confere('histórico da parcela 2 (pagamento parcial): R$ 40,00 — data — Dinheiro (na linha da parcela e na aba Pagamentos)', (lC[2] ?? '').includes(`R$ 40,00 — ${dataBR(recCanc[1].d)} — Dinheiro`) && tCPagamentos.includes(`${dataBR(recCanc[1].d)} Parcela 2/4 R$ 40,00 Dinheiro`));
 
   console.log('== 8. Parcelas pagas continuam pagas ==');
-  confere('parcela 1: selo Pago, pago 100,00, sem "Cancelada com o contrato"', /Pago/.test(lC[1] ?? '') && !/Cancelada com o contrato/.test(lC[1] ?? '') && (lC[1] ?? '').includes('R$ 100,00 R$ 100,00'));
+  confere('parcela 1: selo Pago, pago 100,00, sem "Cancelada com o contrato"', /Pago/.test(lC[1] ?? '') && !/Cancelada com o contrato/.test(lC[1] ?? '') && /Pago\s+R\$ 100,00 —/.test(lC[1] ?? ''));
 
   console.log('== 9. Parcelas não pagas só como histórico cancelado ==');
   confere('parcela 2 (parcial): "Cancelada com o contrato" + "Pagamento parcial preservado" + pago 40,00; sem selo Parcial/Pendente',
-    /Cancelada com o contrato/.test(lC[2] ?? '') && /Pagamento parcial preservado/.test(lC[2] ?? '') && (lC[2] ?? '').includes('R$ 100,00 R$ 40,00') && !/\bParcial\b|\bPendente\b/.test(lC[2] ?? ''));
+    /Cancelada com o contrato/.test(lC[2] ?? '') && /Pagamento parcial preservado/.test(lC[2] ?? '') && /Pagamento parcial preservado\s+R\$ 40,00 —/.test(lC[2] ?? '') && !/\bParcial\b|\bPendente\b/.test(lC[2] ?? ''));
   confere('parcelas 3 e 4 (pendentes): "Cancelada com o contrato", sem selo Pendente/Vencida', [3, 4].every((n) => /Cancelada com o contrato/.test(lC[n] ?? '') && !/\bPendente\b|Vencida/.test(lC[n] ?? '')));
   const tempo = tC.slice(tC.indexOf('Linha do tempo'));
   confere('linha do tempo deixa claro o cancelamento (parcelas não pagas e marco "Contrato cancelado")', tempo.includes('Cancelada com o contrato') && tempo.includes('Encerramento') && tempo.includes('Contrato cancelado'));
