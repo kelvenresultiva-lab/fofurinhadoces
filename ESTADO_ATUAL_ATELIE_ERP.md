@@ -2,7 +2,7 @@
 
 Estado real do repositório `FOFURINHA DOCES` (Ateliê ERP / Fofurinha Doces). Este arquivo substitui as versões anteriores, que estavam desatualizadas. Tudo aqui foi conferido no código e no banco; o que não existe está marcado como tal.
 
-Última atualização: 2026-10-26. Último commit funcional: "feat: adiciona logo da marca e prévia de links" (o primeiro commit do repositório é o `7070254`).
+Última atualização: 2026-10-26. Último commit funcional: "feat: mostra contrato, entrada e parcelamento em clientes" (o primeiro commit do repositório é o `7070254`).
 
 ---
 
@@ -51,7 +51,7 @@ Menu principal (`app/(protegido)/Sidebar.tsx`), agrupado em seções com título
 |---|---|---|
 | Autenticação/cadastro | PRONTO | cadastro self-service, login, logout, confirmação de e-mail |
 | Dashboard | PRONTO | filtro de período (este mês, mês anterior, próximos 30 dias, personalizado), 8 cards, resumo compacto das metas do mês atual (`metas/ResumoMetas.tsx`: barra de contratos e de entradas, link "Ver metas" ou "Definir metas do mês"; falha nele fica contida no bloco), gráfico de recebimentos dos últimos 6 meses, resumo financeiro, próximos vencimentos, próximos eventos e orçamentos em negociação. Regra: parcelas de contrato cancelado (mesmo sem a parcela estar cancelada) ficam fora de A receber, Em atraso, Próximos vencimentos, lista e resumo; "Recebido" continua vindo dos recebimentos registrados, inclusive de contratos cancelados depois. A mesma regra vale no `/financeiro` e está centralizada em `app/(protegido)/financeiro/calculos.ts` (Dashboard e Financeiro não têm cálculo próprio) |
-| Clientes | PRONTO | lista, busca, criar, editar, inativar/reativar; ficha com eventos do cliente |
+| Clientes | PRONTO | lista, busca, criar, editar, inativar/reativar; ficha com eventos do cliente. A lista mostra, por cliente, o contrato ativo mais recente: valor, nº, entrada (paga/pendente) e como o restante será pago ("3x de R$ 2.000,00 (de … a …)", "R$ 4.500,00 de uma vez, no mês do casamento (…)" quando o restante é uma única parcela no mês do evento, "em 1x" sem entrada), "Sem contrato" ou "Cancelado"; tabela a partir de 1200px e cards abaixo. A ficha tem "Contratos e pagamento" com um cartão por contrato (valor, entrada com vencimento, restante, já recebido, falta receber, link para o contrato). Tudo derivado das parcelas gravadas pela RPC de conversão (parcela "Entrada" + demais; parcela cancelada fica fora), em `clientes/plano.ts`; sem campo novo no banco. Contratos lidos com evento, parcelas e nº do orçamento embutidos numa consulta |
 | Produtos | PRONTO | catálogo com preço em R$ (decimal exato), unidade, categoria, antecedência; busca, inativar/reativar |
 | Eventos | PRONTO | tipo e status do banco, data civil sem fuso, filtros próximos/passados, busca; mostra orçamentos e contrato |
 | Orçamentos | PRONTO | número automático, itens com preço congelado, desconto, status com histórico, travado após aprovação |
