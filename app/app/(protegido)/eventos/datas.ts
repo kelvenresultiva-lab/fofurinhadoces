@@ -25,3 +25,19 @@ export function hojeISO(): string {
     day: '2-digit',
   }).format(new Date())
 }
+
+// Instante (timestamptz) no fuso do negócio: "25/10/2026 às 14:32".
+export function formatarDataHoraBR(instante: string | null | undefined): string {
+  if (!instante) return '—'
+  const partes = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date(instante))
+  const p = (tipo: string) => partes.find((x) => x.type === tipo)?.value ?? ''
+  return `${p('day')}/${p('month')}/${p('year')} às ${p('hour')}:${p('minute')}`
+}

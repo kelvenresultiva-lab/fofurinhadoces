@@ -42,6 +42,8 @@ async function bloqueia(uid, sql, params) {
   ok(/produtos/.test(pol.contrato_itens), 'policy contrato_itens valida produto_id (correção preservada)');
   const fn = await base.query("select proname, prosecdef from pg_proc where pronamespace='public'::regnamespace and proname in ('registrar_recebimento','converter_orcamento_em_contrato','criar_empresa_e_usuario')");
   ok(fn.rows.length === 3, 'RPCs registrar_recebimento, converter_orcamento_em_contrato e criar_empresa_e_usuario existem');
+  const canc = await base.query("select (select count(*) from pg_proc where pronamespace='public'::regnamespace and proname='cancelar_contrato' and prosecdef)::int rpc, (select count(*) from pg_trigger where tgrelid='public.contratos'::regclass and tgname='contratos_protege_cancelamento')::int trg, (select count(*) from pg_constraint where conname='contratos_cancelamento_check')::int chk, has_function_privilege('anon','public.cancelar_contrato(uuid,text)','execute') anon_exec");
+  ok(canc.rows[0].rpc === 1 && canc.rows[0].trg === 1 && canc.rows[0].chk === 1 && canc.rows[0].anon_exec === false, 'cancelamento de contrato: RPC, trigger de proteção e CHECK existem e anon não executa a RPC');
   const antes = (await Promise.all(tabelas.map(async (t) => [t, (await base.query(`select count(*)::int n from public.${t}`)).rows[0].n]))).reduce((o, [t, n]) => ({ ...o, [t]: n }), {});
   console.log('  contagens antes:', JSON.stringify(antes));
 

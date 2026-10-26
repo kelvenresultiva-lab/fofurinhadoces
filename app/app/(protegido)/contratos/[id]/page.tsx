@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatarPrecoParaExibicao } from '../../produtos/preco'
-import { formatarDataBR } from '../../eventos/datas'
+import { formatarDataBR, formatarDataHoraBR } from '../../eventos/datas'
 import { labelTipo } from '../../eventos/opcoes'
 import { registrarRecebimento } from '../../financeiro/actions'
 import {
@@ -14,6 +14,7 @@ import {
   situacaoParcela,
   totalRecebido,
 } from '../../financeiro/calculos'
+import CancelarContrato from './CancelarContrato'
 import {
   labelStatusContrato,
   classesStatusContrato,
@@ -67,6 +68,11 @@ export default async function ContratoPage({
   const cliente = evento
     ? (await supabase.from('clientes').select('id, nome, email, telefone, whatsapp').eq('id', evento.cliente_id).maybeSingle()).data
     : null
+
+  const responsavelCancelamento =
+    contrato.status === 'cancelado' && contrato.cancelado_por
+      ? (await supabase.from('usuarios').select('nome, email').eq('id', contrato.cancelado_por).maybeSingle()).data
+      : null
 
   const idsProdutos = [...new Set((itens ?? []).map((i) => i.produto_id))]
   const { data: produtos } =
@@ -155,9 +161,12 @@ export default async function ContratoPage({
             )}
           </div>
         </div>
-        <span className={`rounded-full px-3 py-1.5 text-sm font-medium ${classesStatusContrato(contrato.status)}`}>
-          {labelStatusContrato(contrato.status)}
-        </span>
+        <div className="flex flex-col items-end gap-3">
+          <span className={`rounded-full px-3 py-1.5 text-sm font-medium ${classesStatusContrato(contrato.status)}`}>
+            {labelStatusContrato(contrato.status)}
+          </span>
+          {!cancelado && <CancelarContrato contratoId={contrato.id} />}
+        </div>
       </div>
 
       {cancelado && (
@@ -171,6 +180,26 @@ export default async function ContratoPage({
             ele e não entram em cobrança, atraso nem previsão de recebimento. Os recebimentos já registrados continuam
             preservados abaixo.
           </p>
+          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-red-700/80 dark:text-red-400/80">Cancelado em</dt>
+              <dd className="font-medium text-red-900 dark:text-red-200">
+                {contrato.cancelado_em ? formatarDataHoraBR(contrato.cancelado_em) : 'Data não registrada'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-red-700/80 dark:text-red-400/80">Cancelado por</dt>
+              <dd className="font-medium text-red-900 dark:text-red-200">
+                {responsavelCancelamento?.nome || responsavelCancelamento?.email || 'Usuário não identificado'}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-red-700/80 dark:text-red-400/80">Motivo</dt>
+              <dd className="whitespace-pre-line font-medium text-red-900 dark:text-red-200">
+                {contrato.motivo_cancelamento || 'Motivo não registrado'}
+              </dd>
+            </div>
+          </dl>
         </div>
       )}
 

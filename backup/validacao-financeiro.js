@@ -67,7 +67,7 @@ async function criar() {
       return { id: k, parcelas: ps.map((p) => p.id) };
     };
     const receber = (parcelaId, valor, dt, forma) => c.query(`select registrar_recebimento($1,$2,${dia(dt)},$3,null)`, [parcelaId, valor, forma]);
-    const cancelar = (k) => c.query("update contratos set status='cancelado' where id=$1", [k.id]);
+    const cancelar = (k) => c.query("select cancelar_contrato($1, 'Cancelado para validação')", [k.id]);
 
     // ATIVOS
     const KA = await contrato('KA', 100, 1, 1, 10);   // pendente, a vencer

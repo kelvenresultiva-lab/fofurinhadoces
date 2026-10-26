@@ -84,7 +84,7 @@ async function criar() {
     // pendente/parcial (não canceladas): o dashboard precisa excluí-las pelo status do contrato,
     // mas os 50 já recebidos devem permanecer no histórico de recebido.
     await c.query(`select registrar_recebimento($1,50,${dia(-8)},'pix',null)`, [p9[0].id]);
-    await c.query("update contratos set status='cancelado' where id=$1", [K9]);
+    await c.query("select cancelar_contrato($1, 'Cancelado para validação')", [K9]);
   });
 
   fs.writeFileSync(ESTADO, JSON.stringify({ uid, email, empresaId: emp.rows[0].empresa_id, hoje }));

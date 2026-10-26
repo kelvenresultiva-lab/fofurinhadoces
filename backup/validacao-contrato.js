@@ -82,7 +82,7 @@ async function criar() {
     const cancelado = await contrato('Cliente Contrato Cancelado', 4, 4, -70);
     await receber(cancelado.parcelas[0], 100, -65, 'pix');
     await receber(cancelado.parcelas[1], 40, -38, 'dinheiro');
-    await c.query("update contratos set status='cancelado' where id=$1", [cancelado.id]);
+    await c.query("select cancelar_contrato($1, 'Cancelado para validação')", [cancelado.id]);
     return { ativo, cancelado };
   });
 
