@@ -6,6 +6,7 @@ import {
   CalendarDays,
   FileSignature,
   FileText,
+  HandCoins,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -23,6 +24,7 @@ const ITENS = [
   { href: '/orcamentos', label: 'Orçamentos', icone: FileText },
   { href: '/contratos', label: 'Contratos', icone: FileSignature },
   { href: '/parcelas', label: 'Parcelas', icone: Receipt },
+  { href: '/recebimentos', label: 'Recebimentos', icone: HandCoins },
   { href: '/financeiro', label: 'Financeiro', icone: Wallet },
   { href: '/produtos', label: 'Produtos', icone: Package },
 ]

@@ -192,7 +192,8 @@ export default async function ParcelasPage({
     linhas.filter((l) => {
       if (!passaFiltro(filtro, l)) return false
       if (!termo) return true
-      if (soDigitos && l.contratoNumero === Number(termo)) return true
+      // Só dígitos (ou "#12") é número de contrato: não casa com o "1" de "Parcela 1/2".
+      if (soDigitos) return l.contratoNumero === Number(termo)
       return l.textoBusca.includes(termo)
     }),
     ordem

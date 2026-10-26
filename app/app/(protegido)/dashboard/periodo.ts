@@ -58,6 +58,39 @@ export function resolverPeriodo(chave: string | undefined, de: string | undefine
   return { chave: 'mes' as const, ...intervaloDoMes(ano, mes) }
 }
 
+// Recebimentos olham para trás: em vez de "Próximos 30 dias", oferecem "Últimos 30 dias" (hoje
+// incluído) e "Este ano". Mês, mês anterior e personalizado seguem a regra de resolverPeriodo.
+export type ChavePeriodoRecebimentos = 'mes' | 'anterior' | 'ultimos30' | 'ano' | 'personalizado'
+
+export const PERIODOS_RECEBIMENTOS: { value: ChavePeriodoRecebimentos; label: string }[] = [
+  { value: 'mes', label: 'Este mês' },
+  { value: 'anterior', label: 'Mês anterior' },
+  { value: 'ultimos30', label: 'Últimos 30 dias' },
+  { value: 'ano', label: 'Este ano' },
+  { value: 'personalizado', label: 'Período personalizado' },
+]
+
+export function resolverPeriodoRecebimentos(
+  chave: string | undefined,
+  de: string | undefined,
+  ate: string | undefined
+): { chave: ChavePeriodoRecebimentos; inicio: string; fim: string; erro?: string } {
+  const hoje = hojeISO()
+  if (chave === 'ultimos30') return { chave: 'ultimos30', inicio: somarDias(hoje, -29), fim: hoje }
+  if (chave === 'ano') {
+    const { ano } = partes(hoje)
+    return { chave: 'ano', inicio: iso(ano, 1, 1), fim: iso(ano, 12, 31) }
+  }
+  const p = resolverPeriodo(chave === 'proximos30' ? undefined : chave, de, ate)
+  return { ...p, chave: p.chave === 'proximos30' ? 'mes' : p.chave }
+}
+
+// Mês corrente (fuso America/Sao_Paulo), para o card "Recebido neste mês".
+export function mesAtual() {
+  const { ano, mes } = partes(hojeISO())
+  return intervaloDoMes(ano, mes)
+}
+
 // Últimos n meses terminando no mês atual, do mais antigo para o mais novo.
 export function ultimosMeses(n: number): { chave: string; label: string }[] {
   const { ano, mes } = partes(hojeISO())
