@@ -2,7 +2,7 @@
 
 Estado real do repositório `FOFURINHA DOCES` (Ateliê ERP / Fofurinha Doces). Este arquivo substitui as versões anteriores, que estavam desatualizadas. Tudo aqui foi conferido no código e no banco; o que não existe está marcado como tal.
 
-Última atualização: 2026-10-26. Último commit funcional: "feat: adiciona configurações da empresa e conta" (o primeiro commit do repositório é o `7070254`).
+Última atualização: 2026-10-26. Último commit funcional: "feat: adiciona logo da marca e prévia de links" (o primeiro commit do repositório é o `7070254`).
 
 ---
 
@@ -27,6 +27,10 @@ Cobre o fluxo comercial de ponta a ponta: **cliente → evento → orçamento �
 - `@supabase/supabase-js` e `@supabase/ssr` (cliente de navegador, de servidor e renovação de sessão). Ícones: `lucide-react`. Fonte: Inter.
 - Supabase hospedado (Postgres + Auth). Next 16 usa `proxy.ts` no lugar de `middleware.ts`; o arquivo ativo é `app/proxy.ts`, que chama `lib/supabase/middleware.ts` (só um helper).
 - Sem biblioteca de testes. O `app/AGENTS.md` (gerado pelo Next) manda ler `node_modules/next/dist/docs/` antes de escrever código.
+
+## 3.1 Marca e prévia de links
+
+Logo da Fofurinha Doces (bonequinha de pano) em `app/public/logo-fofurinha.webp`, mostrada no topo de login, cadastro e nova senha (`app/app/LogoMarca.tsx`). Ícone do site: `app/app/icon.png` e `apple-icon.png` (só a bonequinha, fundo branco); o `favicon.ico` padrão do Next foi removido. Prévia de links (WhatsApp, redes): `app/app/opengraph-image.jpg` (1200x630, logo centralizada em fundo branco, ~46 KB) + `opengraph-image.alt.txt`, com título, descrição, `og:locale pt_BR` e cartão grande do Twitter em `app/app/layout.tsx`. O endereço absoluto das imagens vem de `NEXT_PUBLIC_SITE_URL`, senão de `VERCEL_PROJECT_PRODUCTION_URL` (variável de sistema da Vercel), senão localhost. As imagens ficam fora do proxy de login (extensões de imagem excluídas do matcher), então o WhatsApp consegue buscá-las. As imagens foram geradas a partir da logo enviada com `sharp`. O menu continua usando a logo cadastrada em Configurações (por empresa); sem logo, o coração padrão.
 
 ## 4. Autenticação (modelo ativo)
 
