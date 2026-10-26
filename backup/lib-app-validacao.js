@@ -38,7 +38,7 @@ async function abrirSessao(email) {
   const cookie = [...jar].map(([n, v]) => `${n}=${v}`).join('; ');
   // As páginas avisam quando uma consulta falha (ex.: oscilação de rede com o Supabase). Nesse caso
   // a leitura é repetida: um valor parcial nunca pode ser comparado como se fosse o definitivo.
-  return async (rota) => {
+  const get = async (rota) => {
     for (let tentativa = 1; tentativa <= 5; tentativa++) {
       try {
         const r = await fetch(APP + rota, { headers: { cookie }, redirect: 'manual' });
@@ -52,6 +52,12 @@ async function abrirSessao(email) {
     }
     throw new Error(`GET ${rota}: a página continuou avisando falha de carregamento após 5 tentativas`);
   };
+  // Resposta crua (sem repetir e sem exigir 200): usada para conferir bloqueios como o 404.
+  get.raw = async (rota) => {
+    const r = await fetch(APP + rota, { headers: { cookie }, redirect: 'manual' });
+    return { status: r.status, html: await r.text() };
+  };
+  return get;
 }
 
 function cartoesFinanceiro(html) {

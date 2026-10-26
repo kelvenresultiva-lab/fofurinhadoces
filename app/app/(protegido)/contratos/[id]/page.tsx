@@ -5,7 +5,15 @@ import { formatarPrecoParaExibicao } from '../../produtos/preco'
 import { formatarDataBR } from '../../eventos/datas'
 import { labelTipo } from '../../eventos/opcoes'
 import { registrarRecebimento } from '../../financeiro/actions'
-import { ehVencida, situacaoParcela } from '../../financeiro/calculos'
+import {
+  ehVencida,
+  parcelasEmAberto,
+  resumoFuturo,
+  saldoParcela,
+  situacaoHistorica,
+  situacaoParcela,
+  totalRecebido,
+} from '../../financeiro/calculos'
 import {
   labelStatusContrato,
   classesStatusContrato,
@@ -49,7 +57,11 @@ export default async function ContratoPage({
       .select('id, produto_id, quantidade, valor_unitario, subtotal, status_producao')
       .eq('contrato_id', id)
       .order('created_at'),
-    supabase.from('parcelas').select('id, numero, descricao, vencimento, valor, valor_pago, status').eq('contrato_id', id).order('numero'),
+    supabase
+      .from('parcelas')
+      .select('id, contrato_id, numero, descricao, vencimento, valor, valor_pago, status')
+      .eq('contrato_id', id)
+      .order('numero'),
   ])
 
   const cliente = evento
@@ -78,21 +90,21 @@ export default async function ContratoPage({
     recebimentosPorParcela.set(r.parcela_id, lista)
   }
 
-  const totalRecebido = (recebimentos ?? []).reduce((soma, r) => soma + Number(r.valor), 0)
-  const saldoContrato = Number(contrato.valor_final) - totalRecebido
+  const recebidoTotal = totalRecebido(recebimentos ?? [])
+  const saldoContrato = Number(contrato.valor_final) - recebidoTotal
 
   const titulo = evento ? evento.titulo || labelTipo(evento.tipo) : 'Contrato'
 
+  // Contrato cancelado = visão histórica, não cobrança. Valor futuro pela regra central
+  // (financeiro/calculos.ts): sem parcela em aberto não há próxima parcela, atraso nem previsão.
+  const cancelado = contrato.status === 'cancelado'
   const listaParcelas = parcelas ?? []
-  const saldoDe = (p: { valor: number | string; valor_pago: number | string }) => Number(p.valor) - Number(p.valor_pago)
-  const proximaParcela = listaParcelas
-    .filter((p) => p.status !== 'cancelado' && saldoDe(p) > 0)
-    .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0]
-  const saldoEmAtraso = listaParcelas
-    .filter((p) => ehVencida(p.vencimento, saldoDe(p), p.status))
-    .reduce((soma, p) => soma + saldoDe(p), 0)
+  const abertas = parcelasEmAberto(listaParcelas, [contrato])
+  const idsAbertas = new Set(abertas.map((p) => p.id))
+  const proximaParcela = [...abertas].sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0]
+  const saldoEmAtraso = resumoFuturo(abertas).emAtraso
   const valorContrato = Number(contrato.valor_final)
-  const percentualRecebido = valorContrato > 0 ? Math.min(100, Math.round((totalRecebido / valorContrato) * 100)) : 0
+  const percentualRecebido = valorContrato > 0 ? Math.min(100, Math.round((recebidoTotal / valorContrato) * 100)) : 0
   const parcelaEntrada = listaParcelas.find((p) => p.descricao === 'Entrada')
   const vencimentoFinal = listaParcelas.map((p) => p.vencimento).sort().at(-1)
   const iniciaisCliente = (cliente?.nome ?? '?')
@@ -148,25 +160,39 @@ export default async function ContratoPage({
         </span>
       </div>
 
+      {cancelado && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-red-200 bg-red-50 p-5 dark:border-red-900/60 dark:bg-red-950/30"
+        >
+          <h2 className="text-base font-semibold text-red-800 dark:text-red-300">Contrato cancelado</h2>
+          <p className="mt-1 text-sm text-red-700 dark:text-red-400">
+            Esta página é apenas o registro histórico do contrato. As parcelas não pagas foram encerradas junto com
+            ele e não entram em cobrança, atraso nem previsão de recebimento. Os recebimentos já registrados continuam
+            preservados abaixo.
+          </p>
+        </div>
+      )}
+
       <dl className="grid grid-cols-2 gap-4 rounded-2xl border border-black/[.06] bg-white p-6 shadow-sm sm:grid-cols-4 dark:border-white/[.1] dark:bg-zinc-950">
         <div>
-          <dt className="text-xs text-zinc-500">Valor total</dt>
+          <dt className="text-xs text-zinc-500">{cancelado ? 'Valor original' : 'Valor total'}</dt>
           <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
             R$ {formatarPrecoParaExibicao(contrato.valor_final)}
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-zinc-500">Entrada</dt>
+          <dt className="text-xs text-zinc-500">{cancelado ? 'Entrada original' : 'Entrada'}</dt>
           <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
             {parcelaEntrada ? `R$ ${formatarPrecoParaExibicao(parcelaEntrada.valor)}` : '—'}
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-zinc-500">Parcelas</dt>
+          <dt className="text-xs text-zinc-500">{cancelado ? 'Parcelas originais' : 'Parcelas'}</dt>
           <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">{listaParcelas.length}</dd>
         </div>
         <div>
-          <dt className="text-xs text-zinc-500">Vencimento final</dt>
+          <dt className="text-xs text-zinc-500">{cancelado ? 'Último vencimento original' : 'Vencimento final'}</dt>
           <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
             {vencimentoFinal ? formatarDataBR(vencimentoFinal) : '—'}
           </dd>
@@ -248,7 +274,7 @@ export default async function ContratoPage({
             </dd>
           </div>
           <div>
-            <dt className="text-zinc-600 dark:text-zinc-400">Valor do contrato</dt>
+            <dt className="text-zinc-600 dark:text-zinc-400">{cancelado ? 'Valor original do contrato' : 'Valor do contrato'}</dt>
             <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
               R$ {formatarPrecoParaExibicao(contrato.valor_final)}
             </dd>
@@ -260,7 +286,7 @@ export default async function ContratoPage({
         <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Financeiro</h2>
         <dl className="grid grid-cols-1 gap-2 rounded-2xl border border-black/[.08] p-4 text-sm sm:grid-cols-3 dark:border-white/[.145]">
           <div>
-            <dt className="text-zinc-600 dark:text-zinc-400">Valor contratado</dt>
+            <dt className="text-zinc-600 dark:text-zinc-400">{cancelado ? 'Valor original' : 'Valor contratado'}</dt>
             <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
               R$ {formatarPrecoParaExibicao(contrato.valor_final)}
             </dd>
@@ -268,15 +294,22 @@ export default async function ContratoPage({
           <div>
             <dt className="text-zinc-600 dark:text-zinc-400">Recebido</dt>
             <dd className="text-lg font-semibold text-green-700 dark:text-green-400">
-              R$ {formatarPrecoParaExibicao(totalRecebido)}
+              R$ {formatarPrecoParaExibicao(recebidoTotal)}
             </dd>
           </div>
-          <div>
-            <dt className="text-zinc-600 dark:text-zinc-400">Saldo</dt>
-            <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
-              R$ {formatarPrecoParaExibicao(saldoContrato)}
-            </dd>
-          </div>
+          {cancelado ? (
+            <div>
+              <dt className="text-zinc-600 dark:text-zinc-400">Situação</dt>
+              <dd className="text-lg font-semibold text-red-700 dark:text-red-400">Contrato cancelado</dd>
+            </div>
+          ) : (
+            <div>
+              <dt className="text-zinc-600 dark:text-zinc-400">Saldo</dt>
+              <dd className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+                R$ {formatarPrecoParaExibicao(saldoContrato)}
+              </dd>
+            </div>
+          )}
         </dl>
 
         {!parcelas || parcelas.length === 0 ? (
@@ -290,15 +323,17 @@ export default async function ContratoPage({
                   <th className="px-4 py-3 font-medium">Vencimento</th>
                   <th className="px-4 py-3 font-medium">Valor</th>
                   <th className="px-4 py-3 font-medium">Pago</th>
-                  <th className="px-4 py-3 font-medium">Saldo</th>
+                  {!cancelado && <th className="px-4 py-3 font-medium">Saldo</th>}
                   <th className="px-4 py-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {parcelas.map((parcela) => {
-                  const saldo = Number(parcela.valor) - Number(parcela.valor_pago)
-                  const situacao = situacaoParcela(parcela)
-                  const podeReceber = contrato.status !== 'cancelado' && parcela.status !== 'cancelado' && saldo > 0
+                  const saldo = saldoParcela(parcela)
+                  // "Vencida" só vale para parcela em aberto (nunca em contrato cancelado).
+                  const situacao = idsAbertas.has(parcela.id) ? situacaoParcela(parcela) : null
+                  const historica = situacaoHistorica(parcela, cancelado)
+                  const podeReceber = !cancelado && parcela.status !== 'cancelado' && saldo > 0
                   const historicoDaParcela = recebimentosPorParcela.get(parcela.id) ?? []
                   const registrarComId = registrarRecebimento.bind(null, parcela.id, id)
 
@@ -314,18 +349,23 @@ export default async function ContratoPage({
                       <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                         R$ {formatarPrecoParaExibicao(parcela.valor_pago)}
                       </td>
-                      <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                        R$ {formatarPrecoParaExibicao(saldo)}
-                      </td>
+                      {!cancelado && (
+                        <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                          R$ {formatarPrecoParaExibicao(saldo)}
+                        </td>
+                      )}
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-2">
                           <span
                             className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
-                              situacao ? situacao.classes : classesStatusParcela(parcela.status)
+                              (historica ?? situacao)?.classes ?? classesStatusParcela(parcela.status)
                             }`}
                           >
-                            {situacao ? situacao.label : labelStatusParcela(parcela.status)}
+                            {(historica ?? situacao)?.label ?? labelStatusParcela(parcela.status)}
                           </span>
+                          {historica?.pagoParcialmente && (
+                            <span className="text-xs text-zinc-500">Pagamento parcial preservado</span>
+                          )}
 
                           {(podeReceber || historicoDaParcela.length > 0) && (
                             <details className="text-xs">
@@ -418,7 +458,8 @@ export default async function ContratoPage({
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Linha do tempo</h2>
           <ol className="flex gap-6 overflow-x-auto pb-2">
             {listaParcelas.map((p) => {
-              const vencida = ehVencida(p.vencimento, saldoDe(p), p.status)
+              const vencida = idsAbertas.has(p.id) && ehVencida(p.vencimento, saldoParcela(p), p.status)
+              const historica = situacaoHistorica(p, cancelado)
               const cor = vencida
                 ? 'bg-red-500'
                 : p.status === 'pago'
@@ -432,9 +473,17 @@ export default async function ContratoPage({
                   <span className="text-zinc-500">{formatarDataBR(p.vencimento)}</span>
                   <span className="font-medium text-zinc-950 dark:text-zinc-50">{p.descricao ?? `Parcela ${p.numero}`}</span>
                   <span className="text-zinc-600 dark:text-zinc-400">R$ {formatarPrecoParaExibicao(p.valor)}</span>
+                  {historica && <span className="text-[10px] text-zinc-500">{historica.label}</span>}
                 </li>
               )
             })}
+            {cancelado && (
+              <li className="flex min-w-24 flex-col items-center gap-1 text-center text-xs">
+                <span className="h-3 w-3 rounded-full bg-red-500" />
+                <span className="text-zinc-500">Encerramento</span>
+                <span className="font-medium text-red-700 dark:text-red-400">Contrato cancelado</span>
+              </li>
+            )}
           </ol>
         </section>
       )}
@@ -454,25 +503,41 @@ export default async function ContratoPage({
               </div>
             </div>
             <dl className="flex flex-1 flex-col gap-2 text-xs">
+              {cancelado && (
+                <div className="flex justify-between gap-2">
+                  <dt className="text-zinc-500">Valor original</dt>
+                  <dd className="font-medium text-zinc-950 dark:text-zinc-50">R$ {formatarPrecoParaExibicao(valorContrato)}</dd>
+                </div>
+              )}
               <div className="flex justify-between gap-2">
                 <dt className="text-zinc-500">Recebido</dt>
-                <dd className="font-medium text-green-700 dark:text-green-400">R$ {formatarPrecoParaExibicao(totalRecebido)}</dd>
+                <dd className="font-medium text-green-700 dark:text-green-400">R$ {formatarPrecoParaExibicao(recebidoTotal)}</dd>
               </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-zinc-500">A receber</dt>
-                <dd className="font-medium text-zinc-950 dark:text-zinc-50">R$ {formatarPrecoParaExibicao(saldoContrato)}</dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-zinc-500">Em atraso</dt>
-                <dd className="font-medium text-red-700 dark:text-red-400">R$ {formatarPrecoParaExibicao(saldoEmAtraso)}</dd>
-              </div>
+              {!cancelado && (
+                <>
+                  <div className="flex justify-between gap-2">
+                    <dt className="text-zinc-500">A receber</dt>
+                    <dd className="font-medium text-zinc-950 dark:text-zinc-50">R$ {formatarPrecoParaExibicao(saldoContrato)}</dd>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <dt className="text-zinc-500">Em atraso</dt>
+                    <dd className="font-medium text-red-700 dark:text-red-400">R$ {formatarPrecoParaExibicao(saldoEmAtraso)}</dd>
+                  </div>
+                </>
+              )}
             </dl>
           </div>
         </div>
 
         <div className="rounded-2xl border border-black/[.06] bg-white p-5 shadow-sm dark:border-white/[.1] dark:bg-zinc-950">
-          <h2 className="mb-3 text-sm font-semibold text-zinc-950 dark:text-zinc-50">Próxima parcela</h2>
-          {proximaParcela ? (
+          <h2 className="mb-3 text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+            {cancelado ? 'Situação do contrato' : 'Próxima parcela'}
+          </h2>
+          {cancelado ? (
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Contrato cancelado. Nenhuma parcela em cobrança.
+            </p>
+          ) : proximaParcela ? (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                 {formatarDataBR(proximaParcela.vencimento)}
@@ -484,7 +549,7 @@ export default async function ContratoPage({
               </div>
               <p className="text-xs text-zinc-500">{proximaParcela.descricao ?? `Parcela ${proximaParcela.numero}`}</p>
               <p className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
-                R$ {formatarPrecoParaExibicao(saldoDe(proximaParcela))}
+                R$ {formatarPrecoParaExibicao(saldoParcela(proximaParcela))}
               </p>
             </div>
           ) : (

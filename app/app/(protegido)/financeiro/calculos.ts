@@ -84,6 +84,23 @@ export function totalRecebido(recebimentos: { valor: Numerico }[]): number {
   return somaMoeda(recebimentos.map((r) => r.valor))
 }
 
+// Página do contrato cancelado (visão histórica): parcela não quitada vira "Cancelada com o
+// contrato" só na exibição — o status gravado em parcelas.status não é alterado. Parcela paga
+// continua "Paga"; parcela já cancelada individualmente mantém o próprio status.
+export function situacaoHistorica(
+  parcela: { valor: Numerico; valor_pago: Numerico; status: string },
+  contratoCancelado: boolean
+) {
+  if (!contratoCancelado || parcela.status === 'pago' || parcela.status === 'cancelado' || saldoParcela(parcela) <= 0) {
+    return null
+  }
+  return {
+    label: 'Cancelada com o contrato',
+    classes: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+    pagoParcialmente: Number(parcela.valor_pago) > 0,
+  }
+}
+
 // Listagem do Financeiro: uma parcela com saldo de contrato cancelado não é cobrança e sai da
 // lista (todos os filtros). Parcelas quitadas ou canceladas continuam visíveis como histórico.
 export function aparecemNaListaFinanceira(parcela: ParcelaFinanceira, cancelados: Set<string>): boolean {
