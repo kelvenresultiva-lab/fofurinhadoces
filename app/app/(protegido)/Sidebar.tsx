@@ -13,6 +13,7 @@ import {
   LogOut,
   Package,
   Receipt,
+  Target,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -31,8 +32,29 @@ const ITENS = [
   { href: '/produtos', label: 'Produtos', icone: Package },
 ]
 
+// Seção "Outros" do menu lateral. No celular os itens seguem na mesma barra, depois dos principais.
+const OUTROS = [{ href: '/metas', label: 'Metas', icone: Target }]
+
 export function Sidebar({ nomeEmpresa }: { nomeEmpresa: string }) {
   const pathname = usePathname()
+
+  const itemLateral = ({ href, label, icone: Icone }: (typeof ITENS)[number]) => {
+    const ativo = pathname === href || pathname.startsWith(`${href}/`)
+    return (
+      <Link
+        key={href}
+        href={href}
+        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+          ativo
+            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+            : 'text-zinc-600 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]'
+        }`}
+      >
+        <Icone className="h-[18px] w-[18px]" />
+        {label}
+      </Link>
+    )
+  }
 
   return (
     <>
@@ -46,23 +68,9 @@ export function Sidebar({ nomeEmpresa }: { nomeEmpresa: string }) {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
-          {ITENS.map(({ href, label, icone: Icone }) => {
-            const ativo = pathname === href || pathname.startsWith(`${href}/`)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  ativo
-                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
-                    : 'text-zinc-600 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]'
-                }`}
-              >
-                <Icone className="h-[18px] w-[18px]" />
-                {label}
-              </Link>
-            )
-          })}
+          {ITENS.map(itemLateral)}
+          <p className="mt-4 px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">Outros</p>
+          {OUTROS.map(itemLateral)}
         </nav>
 
         <form action={logout}>
@@ -77,7 +85,7 @@ export function Sidebar({ nomeEmpresa }: { nomeEmpresa: string }) {
       </aside>
 
       <nav className="flex gap-1 overflow-x-auto border-b border-black/[.06] bg-white px-3 py-2 lg:hidden dark:border-white/[.1] dark:bg-zinc-950">
-        {ITENS.map(({ href, label, icone: Icone }) => {
+        {[...ITENS, ...OUTROS].map(({ href, label, icone: Icone }) => {
           const ativo = pathname === href || pathname.startsWith(`${href}/`)
           return (
             <Link

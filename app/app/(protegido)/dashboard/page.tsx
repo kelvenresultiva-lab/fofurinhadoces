@@ -13,6 +13,7 @@ import {
   totalRecebido,
   vencendoEntre,
 } from '../financeiro/calculos'
+import { ResumoMetas } from '../metas/ResumoMetas'
 import { PERIODOS, resolverPeriodo, ultimosMeses } from './periodo'
 import { BarraEmpilhada, CardIndicador, GraficoBarras, Secao, Vazio, formatarBRL } from './widgets'
 
@@ -163,6 +164,8 @@ export default async function DashboardPage({
         <CardIndicador titulo="Próximos eventos" valor={String(totalEventosFuturos)} detalhe="A partir de hoje, sem cancelados" />
         <CardIndicador titulo="Clientes ativos" valor={String(clientesR.count ?? 0)} />
       </div>
+
+      <ResumoMetas />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Secao titulo="Fluxo de recebimentos (últimos 6 meses)">
