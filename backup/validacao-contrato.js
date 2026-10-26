@@ -167,7 +167,11 @@ async function verificar() {
   console.log('== 6. Sem lembrete/cobrança ==');
   const botoes = [...htmlCanc.matchAll(/<button[^>]*>([\s\S]*?)<\/button>/g)].map((m) => textoDe(m[1]).trim());
   confere('sem lembrete, reenvio, "cobrar" ou link de WhatsApp', !/lembrete|reenviar|enviar|cobrar|wa\.me|api\.whatsapp/i.test(tC) && !/wa\.me|api\.whatsapp/i.test(htmlCanc));
-  confere(`nenhum botão de cobrança na página: o único botão é o "Sair" do layout (encontrados: ${botoes.join(', ') || 'nenhum'})`, botoes.length === 1 && botoes[0] === 'Sair');
+  // Os únicos botões são os do layout: "Sair" e o "Menu" do celular (o painel do menu só existe aberto).
+  confere(
+    `nenhum botão de cobrança na página: só os botões do layout, "Sair" e "Menu" (encontrados: ${botoes.join(', ') || 'nenhum'})`,
+    botoes.length === 2 && botoes.includes('Sair') && botoes.includes('Menu')
+  );
 
   console.log('== 7. Recebimentos históricos visíveis ==');
   confere('recebido 140,00 no Financeiro e no resumo; valor original 400,00 no resumo', tC.includes('Recebido R$ 140,00') && contar(tC, 'R$ 140,00') >= 2 && tC.includes('Valor original R$ 400,00'));

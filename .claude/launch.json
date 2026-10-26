@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "app", "run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "fofurinha-app-producao",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "app", "run", "producao"],
+      "port": 3000
     }
   ]
 }

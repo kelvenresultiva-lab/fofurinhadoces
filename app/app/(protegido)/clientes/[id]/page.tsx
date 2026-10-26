@@ -17,17 +17,15 @@ export default async function EditarClientePage({
   const { erro } = await searchParams
   const supabase = await createClient()
 
-  const { data: cliente } = await supabase.from('clientes').select('*').eq('id', id).maybeSingle()
+  // As duas consultas dependem só do id: em paralelo.
+  const [{ data: cliente }, { data: eventosDoCliente }] = await Promise.all([
+    supabase.from('clientes').select('*').eq('id', id).maybeSingle(),
+    supabase.from('eventos').select('id, tipo, titulo, data, status').eq('cliente_id', id).order('data', { ascending: false, nullsFirst: false }),
+  ])
 
   if (!cliente) {
     notFound()
   }
-
-  const { data: eventosDoCliente } = await supabase
-    .from('eventos')
-    .select('id, tipo, titulo, data, status')
-    .eq('cliente_id', id)
-    .order('data', { ascending: false, nullsFirst: false })
 
   const atualizarComId = atualizarCliente.bind(null, id)
   const alternarStatusComId = alternarStatusCliente.bind(null, id, cliente.status)

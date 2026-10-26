@@ -8,23 +8,22 @@ export default async function ProtegidoLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Sessão validada localmente pela assinatura do JWT (mesma checagem do proxy), sem ida ao Auth.
+  const { data } = await supabase.auth.getClaims()
+  const user = data?.claims
 
   if (!user) {
     redirect('/login')
   }
 
+  // Usuário e empresa numa consulta só (relação usuarios.empresa_id -> empresas).
   const { data: usuario } = await supabase
     .from('usuarios')
-    .select('nome, empresa_id, cargo')
-    .eq('id', user.id)
+    .select('nome, cargo, empresas(nome)')
+    .eq('id', user.sub)
     .maybeSingle()
-
-  const { data: empresa } = usuario
-    ? await supabase.from('empresas').select('nome').eq('id', usuario.empresa_id).maybeSingle()
-    : { data: null }
+  const empresa = usuario?.empresas as { nome: string } | { nome: string }[] | null | undefined
+  const nomeEmpresa = (Array.isArray(empresa) ? empresa[0]?.nome : empresa?.nome) ?? 'Fofurinha Doces'
 
   const iniciais = (usuario?.nome ?? user.email ?? '?')
     .split(' ')
@@ -35,7 +34,7 @@ export default async function ProtegidoLayout({
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[#f8f9fc] lg:flex-row">
-      <Sidebar nomeEmpresa={empresa?.nome ?? 'Fofurinha Doces'} />
+      <Sidebar nomeEmpresa={nomeEmpresa} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-end gap-3 border-b border-black/[.06] bg-white px-6 py-3 dark:border-white/[.1] dark:bg-zinc-950">

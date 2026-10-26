@@ -21,7 +21,7 @@ export default async function EventosPage({
 
   let query = supabase
     .from('eventos')
-    .select('id, cliente_id, tipo, titulo, data, horario, local, cidade, status')
+    .select('id, cliente_id, tipo, titulo, data, horario, local, cidade, status, cliente:clientes(nome)')
 
   if (periodo === 'proximos') {
     query = query.or(`data.gte.${hoje},data.is.null`)
@@ -43,12 +43,11 @@ export default async function EventosPage({
 
   const { data: eventos } = await query
 
-  const idsClientesDosEventos = [...new Set((eventos ?? []).map((e) => e.cliente_id))]
-  const { data: clientesDosEventos } =
-    idsClientesDosEventos.length > 0
-      ? await supabase.from('clientes').select('id, nome').in('id', idsClientesDosEventos)
-      : { data: [] }
-  const nomeClientePorId = new Map((clientesDosEventos ?? []).map((c) => [c.id, c.nome]))
+  // Nome do cliente vem embutido no evento (sem segunda consulta).
+  const nomeDoEmbutido = (c: { nome: string } | { nome: string }[] | null) => (Array.isArray(c) ? c[0]?.nome : c?.nome)
+  const nomeClientePorId = new Map(
+    (eventos ?? []).map((e) => [e.cliente_id, nomeDoEmbutido(e.cliente) ?? ''] as const).filter(([, nome]) => nome)
+  )
 
   // Ordenação operacional: eventos futuros (mais próximos primeiro), depois passados
   // (mais recentes primeiro), e sem data por último. Feito em memória porque o

@@ -59,46 +59,59 @@ export default async function ContratoPage({
   const hoje = hojeISO()
   const supabase = await createClient()
 
-  const { data: contrato, error: erroContrato } = await supabase.from('contratos').select('*').eq('id', id).maybeSingle()
-  if (erroContrato) throw new Error('Falha ao ler o contrato.')
-  if (!contrato) notFound()
-
-  const [eventoR, orcamentoR, itensR, parcelasR] = await Promise.all([
-    supabase.from('eventos').select('id, tipo, titulo, data, cliente_id').eq('id', contrato.evento_id).maybeSingle(),
+  // Uma etapa só, tudo em paralelo: evento, cliente e responsável pelo cancelamento vêm embutidos no
+  // contrato; nome do produto embutido nos itens; recebimentos filtrados pelo contrato via parcela.
+  const um = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? v[0] ?? null : v ?? null)
+  const [contratoR, orcamentoR, itensR, parcelasR, recebimentosR] = await Promise.all([
+    supabase
+      .from('contratos')
+      .select(
+        '*, evento:eventos(id, tipo, titulo, data, cliente_id, cliente:clientes(id, nome, email, telefone, whatsapp)), cancelador:usuarios!contratos_cancelado_por_fkey(nome, email)'
+      )
+      .eq('id', id)
+      .maybeSingle(),
     supabase.from('orcamentos').select('id, numero').eq('contrato_id', id).maybeSingle(),
-    supabase.from('contrato_itens').select('id, produto_id, quantidade, valor_unitario, subtotal, status_producao').eq('contrato_id', id).order('created_at'),
+    supabase
+      .from('contrato_itens')
+      .select('id, produto_id, quantidade, valor_unitario, subtotal, status_producao, produto:produtos(nome)')
+      .eq('contrato_id', id)
+      .order('created_at'),
     supabase.from('parcelas').select('id, contrato_id, numero, descricao, vencimento, valor, valor_pago, status').eq('contrato_id', id).order('numero'),
+    supabase
+      .from('recebimentos')
+      .select('id, parcela_id, valor, data, forma_pagamento, observacoes, parcelas!inner(contrato_id)')
+      .eq('parcelas.contrato_id', id)
+      .order('data', { ascending: false }),
   ])
-  if (eventoR.error || orcamentoR.error || itensR.error || parcelasR.error) throw new Error('Falha ao ler o contrato.')
-  const evento = eventoR.data
+  if (contratoR.error || orcamentoR.error || itensR.error || parcelasR.error) throw new Error('Falha ao ler o contrato.')
+  if (recebimentosR.error) throw new Error('Falha ao ler os recebimentos.')
+  if (!contratoR.data) notFound()
+
+  const { evento: eventoEmbutido, cancelador, ...contrato } = contratoR.data
+  type ClienteContrato = { id: string; nome: string; email: string | null; telefone: string | null; whatsapp: string | null }
+  type EventoContrato = { id: string; tipo: string; titulo: string | null; data: string | null; cliente_id: string; cliente: ClienteContrato | ClienteContrato[] | null }
+  const eventoCompleto = um(eventoEmbutido as EventoContrato | EventoContrato[] | null)
+  const evento = eventoCompleto
+    ? { id: eventoCompleto.id, tipo: eventoCompleto.tipo, titulo: eventoCompleto.titulo, data: eventoCompleto.data, cliente_id: eventoCompleto.cliente_id }
+    : null
+  const cliente = eventoCompleto ? um(eventoCompleto.cliente) : null
+  const responsavelCancelamento =
+    contrato.status === 'cancelado' && contrato.cancelado_por ? um(cancelador as { nome: string; email: string } | { nome: string; email: string }[] | null) : null
+
   const orcamento = orcamentoR.data
   const itens = itensR.data ?? []
   const listaParcelas = parcelasR.data ?? []
-
-  const cliente = evento
-    ? (await supabase.from('clientes').select('id, nome, email, telefone, whatsapp').eq('id', evento.cliente_id).maybeSingle()).data
-    : null
-  const responsavelCancelamento =
-    contrato.status === 'cancelado' && contrato.cancelado_por
-      ? (await supabase.from('usuarios').select('nome, email').eq('id', contrato.cancelado_por).maybeSingle()).data
-      : null
-
-  const idsProdutos = [...new Set(itens.map((i) => i.produto_id))]
-  const { data: produtos } =
-    idsProdutos.length > 0 ? await supabase.from('produtos').select('id, nome').in('id', idsProdutos) : { data: [] }
-  const nomeProdutoPorId = new Map((produtos ?? []).map((p) => [p.id, p.nome]))
-
-  const idsParcelas = listaParcelas.map((p) => p.id)
-  const recebimentosR =
-    idsParcelas.length > 0
-      ? await supabase
-          .from('recebimentos')
-          .select('id, parcela_id, valor, data, forma_pagamento, observacoes')
-          .in('parcela_id', idsParcelas)
-          .order('data', { ascending: false })
-      : { data: [] as { id: string; parcela_id: string; valor: number; data: string; forma_pagamento: string; observacoes: string | null }[], error: null }
-  if (recebimentosR.error) throw new Error('Falha ao ler os recebimentos.')
-  const recebimentos = recebimentosR.data ?? []
+  const nomeProdutoPorId = new Map(
+    itens.map((i) => [i.produto_id, um(i.produto as { nome: string } | { nome: string }[] | null)?.nome ?? ''] as const).filter(([, nome]) => nome)
+  )
+  const recebimentos = (recebimentosR.data ?? []).map((r) => ({
+    id: r.id,
+    parcela_id: r.parcela_id,
+    valor: r.valor,
+    data: r.data,
+    forma_pagamento: r.forma_pagamento,
+    observacoes: r.observacoes,
+  }))
   const recebimentosPorParcela = new Map<string, typeof recebimentos>()
   for (const r of recebimentos) {
     const lista = recebimentosPorParcela.get(r.parcela_id) ?? []

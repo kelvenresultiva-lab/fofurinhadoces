@@ -25,46 +25,45 @@ export default async function OrcamentoPage({
   const { erro } = await searchParams
   const supabase = await createClient()
 
-  const { data: orcamento } = await supabase.from('orcamentos').select('*').eq('id', id).maybeSingle()
-
-  if (!orcamento) {
-    notFound()
-  }
-
-  const editavel = podeEditarOrcamento(orcamento.status)
-
-  const [{ data: evento }, { data: cliente }, { data: itens }, { data: historico }] = await Promise.all([
-    supabase.from('eventos').select('id, tipo, titulo, data').eq('id', orcamento.evento_id).maybeSingle(),
-    supabase.from('clientes').select('id, nome').eq('id', orcamento.cliente_id).maybeSingle(),
+  // Uma etapa só, tudo em paralelo: evento e cliente embutidos no orçamento, nome do produto nos
+  // itens e nome do autor no histórico.
+  const um = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? v[0] ?? null : v ?? null)
+  const [{ data: orcamentoCompleto }, { data: itens }, { data: historico }, { data: produtosAtivos }] = await Promise.all([
+    supabase.from('orcamentos').select('*, evento:eventos(id, tipo, titulo, data), cliente:clientes(id, nome)').eq('id', id).maybeSingle(),
     supabase
       .from('orcamento_itens')
-      .select('id, produto_id, quantidade, valor_unitario, subtotal')
+      .select('id, produto_id, quantidade, valor_unitario, subtotal, produto:produtos(nome)')
       .eq('orcamento_id', id)
       .order('created_at'),
     supabase
       .from('orcamento_historico')
-      .select('id, texto, created_at, usuario_id')
+      .select('id, texto, created_at, usuario_id, usuario:usuarios(nome)')
       .eq('orcamento_id', id)
       .order('created_at', { ascending: false }),
+    supabase.from('produtos').select('id, nome, preco').eq('ativo', true).order('nome'),
   ])
 
-  const idsProdutosDosItens = [...new Set((itens ?? []).map((i) => i.produto_id))]
-  const { data: produtosDosItens } =
-    idsProdutosDosItens.length > 0
-      ? await supabase.from('produtos').select('id, nome').in('id', idsProdutosDosItens)
-      : { data: [] }
-  const nomeProdutoPorId = new Map((produtosDosItens ?? []).map((p) => [p.id, p.nome]))
+  if (!orcamentoCompleto) {
+    notFound()
+  }
 
-  const idsUsuarios = [...new Set((historico ?? []).map((h) => h.usuario_id).filter(Boolean))] as string[]
-  const { data: usuariosDoHistorico } =
-    idsUsuarios.length > 0 ? await supabase.from('usuarios').select('id, nome').in('id', idsUsuarios) : { data: [] }
-  const nomeUsuarioPorId = new Map((usuariosDoHistorico ?? []).map((u) => [u.id, u.nome]))
+  const { evento: eventoEmbutido, cliente: clienteEmbutido, ...orcamento } = orcamentoCompleto
+  const evento = um(eventoEmbutido as { id: string; tipo: string; titulo: string | null; data: string | null } | null)
+  const cliente = um(clienteEmbutido as { id: string; nome: string } | null)
+  const editavel = podeEditarOrcamento(orcamento.status)
+
+  const nomeProdutoPorId = new Map(
+    (itens ?? []).map((i) => [i.produto_id, um<{ nome: string }>(i.produto)?.nome ?? ''] as const).filter(([, nome]) => nome)
+  )
+  const nomeUsuarioPorId = new Map(
+    (historico ?? [])
+      .map((h) => [h.usuario_id, um<{ nome: string }>(h.usuario)?.nome ?? ''] as const)
+      .filter((par): par is readonly [string, string] => !!par[0] && !!par[1])
+  )
 
   // Só produtos ativos entram como opção para item novo (histórico continua mostrando
   // o nome de produtos já inativados, via nomeProdutoPorId acima).
-  const { data: produtosDisponiveis } = editavel
-    ? await supabase.from('produtos').select('id, nome, preco').eq('ativo', true).order('nome')
-    : { data: [] }
+  const produtosDisponiveis = editavel ? produtosAtivos : []
 
   const inputClasses =
     'rounded-lg border border-black/[.08] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-950 dark:border-white/[.145] dark:focus:border-zinc-50'

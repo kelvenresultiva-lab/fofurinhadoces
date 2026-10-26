@@ -16,7 +16,9 @@ export default async function OrcamentosPage({
 
   let query = supabase
     .from('orcamentos')
-    .select('id, numero, cliente_id, evento_id, status, subtotal, desconto_tipo, desconto_valor, valor_total, data_emissao')
+    .select(
+      'id, numero, cliente_id, evento_id, status, subtotal, desconto_tipo, desconto_valor, valor_total, data_emissao, cliente:clientes(id, nome), evento:eventos(id, tipo, titulo, data)'
+    )
     .order('numero', { ascending: false })
 
   if (status) {
@@ -51,20 +53,14 @@ export default async function OrcamentosPage({
 
   const { data: orcamentos } = await query
 
-  const idsClientes = [...new Set((orcamentos ?? []).map((o) => o.cliente_id))]
-  const idsEventos = [...new Set((orcamentos ?? []).map((o) => o.evento_id))]
+  // Cliente e evento vêm embutidos no orçamento (sem segunda etapa de consultas).
+  type EventoRef = { id: string; tipo: string; titulo: string | null; data: string | null }
+  const um = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? v[0] ?? null : v ?? null)
+  const clientes = (orcamentos ?? []).map((o) => um<{ id: string; nome: string }>(o.cliente)).filter((c) => c !== null)
+  const eventos = (orcamentos ?? []).map((o) => um<EventoRef>(o.evento)).filter((e) => e !== null)
 
-  const [{ data: clientes }, { data: eventos }] = await Promise.all([
-    idsClientes.length > 0
-      ? supabase.from('clientes').select('id, nome').in('id', idsClientes)
-      : Promise.resolve({ data: [] as { id: string; nome: string }[] }),
-    idsEventos.length > 0
-      ? supabase.from('eventos').select('id, tipo, titulo, data').in('id', idsEventos)
-      : Promise.resolve({ data: [] as { id: string; tipo: string; titulo: string | null; data: string | null }[] }),
-  ])
-
-  const nomeClientePorId = new Map((clientes ?? []).map((c) => [c.id, c.nome]))
-  const eventoPorId = new Map((eventos ?? []).map((e) => [e.id, e]))
+  const nomeClientePorId = new Map(clientes.map((c) => [c.id, c.nome]))
+  const eventoPorId = new Map(eventos.map((e) => [e.id, e]))
 
   return (
     <div className="flex flex-col gap-6">

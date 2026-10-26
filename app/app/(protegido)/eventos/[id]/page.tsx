@@ -18,23 +18,20 @@ export default async function EditarEventoPage({
   const { erro } = await searchParams
   const supabase = await createClient()
 
-  const { data: evento } = await supabase.from('eventos').select('*').eq('id', id).maybeSingle()
+  // Tudo depende só do id do evento: uma etapa, consultas em paralelo (o cliente vem embutido).
+  const [{ data: eventoComCliente }, { data: clientesAtivos }, { data: orcamentosDoEvento }, { data: contratoDoEvento }] = await Promise.all([
+    supabase.from('eventos').select('*, cliente:clientes(id, nome, status)').eq('id', id).maybeSingle(),
+    supabase.from('clientes').select('id, nome').eq('status', 'ativo').order('nome'),
+    supabase.from('orcamentos').select('id, numero, status, valor_total').eq('evento_id', id).order('numero', { ascending: false }),
+    supabase.from('contratos').select('id, status, valor_final').eq('evento_id', id).maybeSingle(),
+  ])
 
-  if (!evento) {
+  if (!eventoComCliente) {
     notFound()
   }
 
-  const { data: cliente } = await supabase
-    .from('clientes')
-    .select('id, nome, status')
-    .eq('id', evento.cliente_id)
-    .maybeSingle()
-
-  const { data: clientesAtivos } = await supabase
-    .from('clientes')
-    .select('id, nome')
-    .eq('status', 'ativo')
-    .order('nome')
+  const { cliente: clienteEmbutido, ...evento } = eventoComCliente
+  const cliente = (Array.isArray(clienteEmbutido) ? clienteEmbutido[0] : clienteEmbutido) as { id: string; nome: string; status: string } | null
 
   // Se o cliente deste evento foi inativado depois, ele continua aparecendo aqui
   // (não perdemos o histórico só porque o cadastro do cliente mudou de status).
@@ -42,18 +39,6 @@ export default async function EditarEventoPage({
   if (cliente && !clientesDisponiveis.some((c) => c.id === cliente.id)) {
     clientesDisponiveis.unshift(cliente)
   }
-
-  const { data: orcamentosDoEvento } = await supabase
-    .from('orcamentos')
-    .select('id, numero, status, valor_total')
-    .eq('evento_id', id)
-    .order('numero', { ascending: false })
-
-  const { data: contratoDoEvento } = await supabase
-    .from('contratos')
-    .select('id, status, valor_final')
-    .eq('evento_id', id)
-    .maybeSingle()
 
   const atualizarComId = atualizarEvento.bind(null, id)
 

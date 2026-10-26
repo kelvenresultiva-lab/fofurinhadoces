@@ -13,7 +13,9 @@ import {
   totalRecebido,
   vencendoEntre,
 } from '../financeiro/calculos'
-import { ResumoMetas } from '../metas/ResumoMetas'
+import { Suspense } from 'react'
+import { ResumoMetas, ResumoMetasCarregando } from '../metas/ResumoMetas'
+import { carregarDadosMetas } from '../metas/dados'
 import { PERIODOS, resolverPeriodo, ultimosMeses } from './periodo'
 import { BarraEmpilhada, CardIndicador, GraficoBarras, Secao, Vazio, formatarBRL } from './widgets'
 
@@ -26,17 +28,23 @@ export default async function DashboardPage({
   const periodo = resolverPeriodo(periodoParam, de, ate)
   const hoje = hojeISO()
   const meses = ultimosMeses(6)
+  // As metas começam a carregar já, em paralelo com o resto; o bloco delas aparece quando chegar.
+  const dadosMetas = carregarDadosMetas().then(
+    (dados) => ({ ok: true as const, dados }),
+    () => ({ ok: false as const })
+  )
   const supabase = await createClient()
 
   // Todas as consultas passam pelo cliente autenticado: a RLS já restringe à empresa do usuário.
+  // Nomes de evento e cliente vêm embutidos (relações por chave estrangeira): uma etapa só.
   const [parcelasR, recebimentosR, contratosR, clientesR, eventosR, orcamentosR] = await Promise.all([
     supabase.from('parcelas').select('id, contrato_id, numero, vencimento, valor, valor_pago, status'),
     supabase.from('recebimentos').select('valor, data'),
-    supabase.from('contratos').select('id, evento_id, status'),
+    supabase.from('contratos').select('id, evento_id, status, evento:eventos(id, tipo, titulo, data, cliente_id, cliente:clientes(nome))'),
     supabase.from('clientes').select('id', { count: 'exact', head: true }).eq('status', 'ativo'),
     supabase
       .from('eventos')
-      .select('id, cliente_id, tipo, titulo, data, horario, local, cidade, status', { count: 'exact' })
+      .select('id, cliente_id, tipo, titulo, data, horario, local, cidade, status, cliente:clientes(nome)', { count: 'exact' })
       .gte('data', hoje)
       .neq('status', 'cancelado')
       .order('data')
@@ -44,7 +52,9 @@ export default async function DashboardPage({
       .limit(5),
     supabase
       .from('orcamentos')
-      .select('id, numero, cliente_id, evento_id, valor_total, status, updated_at', { count: 'exact' })
+      .select('id, numero, cliente_id, evento_id, valor_total, status, updated_at, evento:eventos(id, tipo, titulo, data, cliente_id), cliente:clientes(nome)', {
+        count: 'exact',
+      })
       .in('status', ['enviado', 'em_negociacao'])
       .order('updated_at', { ascending: false })
       .limit(5),
@@ -80,32 +90,29 @@ export default async function DashboardPage({
 
   const listaVencimentos = [...abertas].sort((a, b) => a.vencimento.localeCompare(b.vencimento)).slice(0, 6)
 
-  // Nomes: duas consultas em lote (eventos, depois clientes) — sem N+1.
+  // Nomes: vêm embutidos nas consultas acima (evento do contrato e do orçamento, cliente de cada um).
+  type EventoRef = { id: string; tipo: string; titulo: string | null; data: string | null; cliente_id: string }
+  const um = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? v[0] ?? null : v ?? null)
   const contratoPorId = new Map(contratos.map((c) => [c.id, c]))
-  const idsEventos = [
-    ...new Set([
-      ...listaVencimentos.map((p) => contratoPorId.get(p.contrato_id)?.evento_id).filter(Boolean),
-      ...orcamentosAtencao.map((o) => o.evento_id),
-    ]),
-  ] as string[]
-  const { data: eventosRef } =
-    idsEventos.length > 0
-      ? await supabase.from('eventos').select('id, tipo, titulo, data, cliente_id').in('id', idsEventos)
-      : { data: [] as { id: string; tipo: string; titulo: string | null; data: string | null; cliente_id: string }[] }
-  const eventoPorId = new Map((eventosRef ?? []).map((e) => [e.id, e]))
-
-  const idsClientes = [
-    ...new Set([
-      ...(eventosRef ?? []).map((e) => e.cliente_id),
-      ...eventosFuturos.map((e) => e.cliente_id),
-      ...orcamentosAtencao.map((o) => o.cliente_id),
-    ]),
-  ]
-  const { data: clientesRef } =
-    idsClientes.length > 0
-      ? await supabase.from('clientes').select('id, nome').in('id', idsClientes)
-      : { data: [] as { id: string; nome: string }[] }
-  const nomeCliente = new Map((clientesRef ?? []).map((c) => [c.id, c.nome]))
+  const eventoPorId = new Map<string, EventoRef>()
+  const nomeCliente = new Map<string, string>()
+  for (const c of contratos) {
+    const e = um<EventoRef & { cliente: { nome: string } | { nome: string }[] | null }>(c.evento)
+    if (!e) continue
+    eventoPorId.set(e.id, e)
+    const nome = um<{ nome: string }>(e.cliente)?.nome
+    if (nome) nomeCliente.set(e.cliente_id, nome)
+  }
+  for (const o of orcamentosAtencao) {
+    const e = um<EventoRef>(o.evento)
+    if (e) eventoPorId.set(e.id, e)
+    const nome = um<{ nome: string }>(o.cliente)?.nome
+    if (nome) nomeCliente.set(o.cliente_id, nome)
+  }
+  for (const e of eventosFuturos) {
+    const nome = um<{ nome: string }>(e.cliente)?.nome
+    if (nome) nomeCliente.set(e.cliente_id, nome)
+  }
   const tituloEvento = (e?: { titulo: string | null; tipo: string }) => (e ? e.titulo || labelTipo(e.tipo) : '—')
 
   const totalEventosFuturos = eventosR.count ?? 0
@@ -165,7 +172,9 @@ export default async function DashboardPage({
         <CardIndicador titulo="Clientes ativos" valor={String(clientesR.count ?? 0)} />
       </div>
 
-      <ResumoMetas />
+      <Suspense fallback={<ResumoMetasCarregando />}>
+        <ResumoMetas dados={dadosMetas} />
+      </Suspense>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Secao titulo="Fluxo de recebimentos (últimos 6 meses)">

@@ -4,14 +4,19 @@ import { BarraProgresso } from './BarraProgresso'
 import { carregarDadosMetas } from './dados'
 import { mesAtual, numero, progresso, realizadoContratos, realizadoEntradas, rotuloMes } from './calculos'
 
+type ResultadoMetas = { ok: true; dados: Awaited<ReturnType<typeof carregarDadosMetas>> } | { ok: false }
+
+export function ResumoMetasCarregando() {
+  return <div className="h-40 animate-pulse rounded-2xl bg-zinc-200/70" aria-busy="true" aria-label="Carregando metas" />
+}
+
 // Resumo compacto das metas do MÊS ATUAL para o Dashboard (independe do filtro de período dele).
-// Falha de leitura fica contida neste bloco: o resto do Dashboard continua aparecendo.
-export async function ResumoMetas() {
+// Recebe a leitura já iniciada pelo Dashboard (em paralelo com as outras consultas) e é mostrado
+// dentro de um Suspense. Falha de leitura fica contida neste bloco: o resto do Dashboard aparece.
+export async function ResumoMetas({ dados: leitura }: { dados: Promise<ResultadoMetas> }) {
   const mes = mesAtual()
-  let dados: Awaited<ReturnType<typeof carregarDadosMetas>>
-  try {
-    dados = await carregarDadosMetas()
-  } catch {
+  const resultado = await leitura
+  if (!resultado.ok) {
     return (
       <section className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
         Não foi possível carregar as metas do mês. Atualize a página; se continuar, abra a página de Metas.
@@ -19,6 +24,7 @@ export async function ResumoMetas() {
     )
   }
 
+  const { dados } = resultado
   const meta = dados.metaPorMes.get(mes)
   const metas = [
     { titulo: 'Meta de contratos', meta: numero(meta?.meta_contratos), realizado: realizadoContratos(dados.contratos, mes).valor, rotulo: 'contratado' },
