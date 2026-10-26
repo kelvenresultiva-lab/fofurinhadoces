@@ -4,7 +4,16 @@ import { formatarPrecoParaExibicao } from '../produtos/preco'
 import { formatarDataBR, hojeISO } from '../eventos/datas'
 import { labelTipo } from '../eventos/opcoes'
 import { labelStatusParcela, classesStatusParcela } from '../contratos/opcoes'
-import { ehVencida, situacaoParcela } from './calculos'
+import {
+  aparecemNaListaFinanceira,
+  ehVencida,
+  idsContratosCancelados,
+  parcelasEmAberto,
+  resumoFuturo,
+  saldoParcela,
+  situacaoParcela,
+  totalRecebido,
+} from './calculos'
 
 const FILTROS = [
   { value: 'todas', label: 'Todas' },
@@ -26,21 +35,22 @@ export default async function FinanceiroPage({
 
   // Cards sempre refletem o total da empresa, independente do filtro/busca da
   // listagem abaixo — por isso essa busca é separada.
-  const [{ data: todasParcelas }, { data: todosRecebimentos }] = await Promise.all([
-    supabase.from('parcelas').select('valor, valor_pago, status, vencimento'),
+  const [parcelasR, recebimentosR, contratosR] = await Promise.all([
+    supabase.from('parcelas').select('contrato_id, valor, valor_pago, status, vencimento'),
     supabase.from('recebimentos').select('valor'),
+    supabase.from('contratos').select('id, evento_id, status'),
   ])
+  // Falha de consulta nunca pode virar "R$ 0,00" em silêncio: avisa na tela.
+  let falhou = [parcelasR, recebimentosR, contratosR].some((r) => r.error)
+  const todasParcelas = parcelasR.data
+  const todosRecebimentos = recebimentosR.data
+  const contratos = contratosR.data ?? []
+  const cancelados = idsContratosCancelados(contratos)
 
-  const recebido = (todosRecebimentos ?? []).reduce((soma, r) => soma + Number(r.valor), 0)
-  const aReceber = (todasParcelas ?? [])
-    .filter((p) => p.status !== 'cancelado')
-    .reduce((soma, p) => soma + (Number(p.valor) - Number(p.valor_pago)), 0)
-  const emAtraso = (todasParcelas ?? [])
-    .filter((p) => ehVencida(p.vencimento, Number(p.valor) - Number(p.valor_pago), p.status))
-    .reduce((soma, p) => soma + (Number(p.valor) - Number(p.valor_pago)), 0)
-  const proximosVencimentos = (todasParcelas ?? []).filter(
-    (p) => p.status !== 'cancelado' && Number(p.valor) - Number(p.valor_pago) > 0 && p.vencimento >= hoje
-  ).length
+  // Valores futuros: regra única em ./calculos (a mesma do Dashboard). "Recebido" vem do ledger
+  // de recebimentos e não é afetado pelo cancelamento do contrato.
+  const recebido = totalRecebido(todosRecebimentos ?? [])
+  const futuro = resumoFuturo(parcelasEmAberto(todasParcelas ?? [], contratos), hoje)
 
   // Listagem filtrada/buscada
   let query = supabase
@@ -79,25 +89,24 @@ export default async function FinanceiroPage({
     }
   }
 
-  const { data: parcelas } = await query
+  const { data: parcelas, error: erroLista } = await query
+  if (erroLista) falhou = true
 
+  // Parcela com saldo de contrato cancelado não é cobrança: sai de todos os filtros.
   // Ordenação operacional: vencidas primeiro, depois vencimento mais próximo.
-  const parcelasOrdenadas = [...(parcelas ?? [])].sort((a, b) => {
-    const saldoA = Number(a.valor) - Number(a.valor_pago)
-    const saldoB = Number(b.valor) - Number(b.valor_pago)
-    const vencidaA = ehVencida(a.vencimento, saldoA, a.status)
-    const vencidaB = ehVencida(b.vencimento, saldoB, b.status)
-    if (vencidaA !== vencidaB) return vencidaA ? -1 : 1
-    return a.vencimento.localeCompare(b.vencimento)
-  })
+  const parcelasOrdenadas = (parcelas ?? [])
+    .filter((p) => aparecemNaListaFinanceira(p, cancelados))
+    .sort((a, b) => {
+      const vencidaA = ehVencida(a.vencimento, saldoParcela(a), a.status, hoje)
+      const vencidaB = ehVencida(b.vencimento, saldoParcela(b), b.status, hoje)
+      if (vencidaA !== vencidaB) return vencidaA ? -1 : 1
+      return a.vencimento.localeCompare(b.vencimento)
+    })
 
-  const idsContratosDaLista = [...new Set(parcelasOrdenadas.map((p) => p.contrato_id))]
-  const { data: contratos } =
-    idsContratosDaLista.length > 0
-      ? await supabase.from('contratos').select('id, evento_id').in('id', idsContratosDaLista)
-      : { data: [] as { id: string; evento_id: string }[] }
-
-  const idsEventosDaLista = [...new Set((contratos ?? []).map((c) => c.evento_id))]
+  const idsContratosDaLista = new Set(parcelasOrdenadas.map((p) => p.contrato_id))
+  const idsEventosDaLista = [
+    ...new Set(contratos.filter((c) => idsContratosDaLista.has(c.id)).map((c) => c.evento_id)),
+  ]
   const { data: eventos } =
     idsEventosDaLista.length > 0
       ? await supabase.from('eventos').select('id, tipo, titulo, cliente_id').in('id', idsEventosDaLista)
@@ -109,7 +118,7 @@ export default async function FinanceiroPage({
       ? await supabase.from('clientes').select('id, nome').in('id', idsClientesDaLista)
       : { data: [] as { id: string; nome: string }[] }
 
-  const contratoPorId = new Map((contratos ?? []).map((c) => [c.id, c]))
+  const contratoPorId = new Map(contratos.map((c) => [c.id, c]))
   const eventoPorId = new Map((eventos ?? []).map((e) => [e.id, e]))
   const nomeClientePorId = new Map((clientes ?? []).map((c) => [c.id, c.nome]))
 
@@ -122,12 +131,20 @@ export default async function FinanceiroPage({
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Contas a receber dos contratos.</p>
       </div>
 
+      {falhou && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          Não foi possível carregar alguns indicadores. Os valores abaixo podem estar incompletos — atualize a página;
+          se continuar, tente novamente em instantes.
+        </p>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className={cardClasses}>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">A receber</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
-            R$ {formatarPrecoParaExibicao(aReceber)}
+            R$ {formatarPrecoParaExibicao(futuro.aReceber)}
           </p>
+          <p className="mt-1 text-xs text-zinc-500">{futuro.qtdAReceber} parcela(s) em aberto</p>
         </div>
         <div className={cardClasses}>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Recebido</p>
@@ -138,12 +155,16 @@ export default async function FinanceiroPage({
         <div className={cardClasses}>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Em atraso</p>
           <p className="mt-1 text-2xl font-semibold text-red-700 dark:text-red-400">
-            R$ {formatarPrecoParaExibicao(emAtraso)}
+            R$ {formatarPrecoParaExibicao(futuro.emAtraso)}
           </p>
+          <p className="mt-1 text-xs text-zinc-500">{futuro.qtdEmAtraso} parcela(s) vencida(s)</p>
         </div>
         <div className={cardClasses}>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Próximos vencimentos</p>
-          <p className="mt-1 text-2xl font-semibold text-zinc-950 dark:text-zinc-50">{proximosVencimentos}</p>
+          <p className="mt-1 text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
+            R$ {formatarPrecoParaExibicao(futuro.aVencer)}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">{futuro.qtdAVencer} parcela(s) a partir de hoje</p>
         </div>
       </div>
 

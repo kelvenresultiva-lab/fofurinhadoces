@@ -43,13 +43,13 @@ Isolamento por RLS no Postgres, via `current_empresa_id()` (lê `usuarios.empres
 | Módulo | Status | O que faz |
 |---|---|---|
 | Autenticação/cadastro | PRONTO | cadastro self-service, login, logout, confirmação de e-mail |
-| Dashboard | PRONTO | filtro de período (este mês, mês anterior, próximos 30 dias, personalizado), 8 cards, gráfico de recebimentos dos últimos 6 meses, resumo financeiro, próximos vencimentos, próximos eventos e orçamentos em negociação. Regra: parcelas de contrato cancelado (mesmo sem a parcela estar cancelada) ficam fora de A receber, Em atraso, Próximos vencimentos, lista e resumo; "Recebido" continua vindo dos recebimentos registrados, inclusive de contratos cancelados depois. A página `/financeiro` ainda NÃO aplica essa exclusão (só ignora parcela cancelada) |
+| Dashboard | PRONTO | filtro de período (este mês, mês anterior, próximos 30 dias, personalizado), 8 cards, gráfico de recebimentos dos últimos 6 meses, resumo financeiro, próximos vencimentos, próximos eventos e orçamentos em negociação. Regra: parcelas de contrato cancelado (mesmo sem a parcela estar cancelada) ficam fora de A receber, Em atraso, Próximos vencimentos, lista e resumo; "Recebido" continua vindo dos recebimentos registrados, inclusive de contratos cancelados depois. A mesma regra vale no `/financeiro` e está centralizada em `app/(protegido)/financeiro/calculos.ts` (Dashboard e Financeiro não têm cálculo próprio) |
 | Clientes | PRONTO | lista, busca, criar, editar, inativar/reativar; ficha com eventos do cliente |
 | Produtos | PRONTO | catálogo com preço em R$ (decimal exato), unidade, categoria, antecedência; busca, inativar/reativar |
 | Eventos | PRONTO | tipo e status do banco, data civil sem fuso, filtros próximos/passados, busca; mostra orçamentos e contrato |
 | Orçamentos | PRONTO | número automático, itens com preço congelado, desconto, status com histórico, travado após aprovação |
 | Contratos | PRONTO (somente leitura) | gerado só a partir de orçamento aprovado; itens, valores, parcelas, linha do tempo, resumo lateral |
-| Financeiro | PRONTO | cards, filtros, busca, registrar recebimento, histórico por parcela |
+| Financeiro | PRONTO | cards (A receber, Recebido, Em atraso, Próximos vencimentos em valor e nº de parcelas), filtros (todas, pendentes, parciais, pagas, vencidas), busca, registrar recebimento, histórico por parcela. Aviso na tela se uma consulta falhar (nunca mostra R$ 0,00 em silêncio). Parcela com saldo de contrato cancelado não aparece em nenhum filtro nem entra em valor futuro; parcela quitada de contrato cancelado continua em "Todas"/"Pagas" e o histórico de recebimentos segue na página do contrato; "Recebido" soma todos os recebimentos |
 | Produção | NÃO EXISTE | só a coluna `contrato_itens.status_producao`, sem tela |
 | Agenda, Relatórios, Marketing | NÃO EXISTE | |
 | Documentos | NÃO EXISTE | existem a tabela `documentos` e o bucket, sem tela |
@@ -106,7 +106,7 @@ Um bucket, `documentos`, privado, com 3 policies por pasta de empresa. Sem tela 
 ## 15. Variáveis de ambiente (somente nomes)
 
 - `app/.env.local` (usado pelo Next): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Atualizado após a rotação de credenciais.
-- `.env.novo` na raiz (só para scripts de `backup/`): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`. Como as credenciais foram rotadas, esses valores precisam ser atualizados antes de usar os scripts.
+- `.env.novo` na raiz (só para scripts de `backup/`): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`. Após a rotação os valores foram conferidos e os scripts funcionam.
 - Existem `.env.example` na raiz e em `app/`, sem valores. A chave secret nunca é usada pelo código do Next.
 
 ## 16. SQL aplicado (versionado em `backup/`)
@@ -116,7 +116,7 @@ Não existe `supabase/migrations/` nem migrations numeradas. O histórico é um 
 - `rpc_criar_empresa_usuario.sql`.
 - `fix_orcamento_itens_cross_tenant.sql`, `fix_orcamentos_cross_tenant.sql`, `fix_contrato_itens_cross_tenant.sql`: três brechas de isolamento entre empresas, achadas em teste e corrigidas (a policy não validava `produto_id`, `cliente_id`/`evento_id`).
 - `rpc_registrar_recebimento.sql`.
-- Scripts: `apply-sql.js`, `apply-migration.js`, `validacao-dashboard.js` (cria uma empresa de teste com cenário controlado, imprime os valores esperados do dashboard calculados por SQL e remove tudo), `regressao-completa.js` (regressão do banco: policies, fluxo completo e isolamento; cria e apaga duas empresas de teste), `test-rpc-atomicidade.js`, `export-all.js`, `gerar-migration.js`, `test-connection.js`.
+- Scripts: `apply-sql.js`, `apply-migration.js`, `validacao-dashboard.js` (`criar | esperado | comparar | limpar`: empresa de teste com cenário controlado, valores esperados do dashboard calculados por SQL, comparação com o que Dashboard e Financeiro mostram nos 4 períodos, e remoção de tudo), `validacao-financeiro.js` (`criar | verificar | limpar`: 7 contratos de cenários diferentes, confere Dashboard x Financeiro x SQL, os 5 filtros e o histórico de recebimentos de contratos cancelados; `limpar` confere que o banco voltou às contagens iniciais), `lib-app-validacao.js` (login do usuário de teste e leitura das páginas, usado pelos dois scripts; precisa do servidor em `APP_URL`, padrão `http://localhost:3000`), `regressao-completa.js` (regressão do banco: policies, fluxo completo e isolamento; cria e apaga duas empresas de teste), `test-rpc-atomicidade.js`, `export-all.js`, `gerar-migration.js`, `test-connection.js`.
 
 ## 17. Segurança implementada
 
@@ -134,7 +134,7 @@ Produção; Agenda; PDF de orçamento e contrato; estorno, edição e exclusão 
 
 ## 20. Último ponto do desenvolvimento
 
-Redesign visual (menu lateral, barra superior, tema claro, fonte Inter, página do contrato em duas colunas), reativação do projeto Supabase, validação completa, rotação das credenciais e primeiro commit no Git. O banco hoje tem 1 empresa e 1 usuário reais e nenhum dado de negócio.
+Redesign visual (menu lateral, barra superior, tema claro, fonte Inter, página do contrato em duas colunas), reativação do projeto Supabase, validação completa, rotação das credenciais e primeiro commit no Git. Depois: Dashboard gerencial e alinhamento do Dashboard com o Financeiro na regra de contratos cancelados (cálculo único em `financeiro/calculos.ts`). Ainda não aplicam a regra: a página do próprio contrato (`/contratos/[id]`), que mostra o saldo, o atraso e a próxima parcela daquele contrato mesmo cancelado (visão por contrato, não total da empresa). O banco hoje tem 1 empresa e 1 usuário reais e nenhum dado de negócio.
 
 ## 21. Próximo passo recomendado
 

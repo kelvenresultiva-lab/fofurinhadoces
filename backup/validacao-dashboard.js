@@ -1,16 +1,19 @@
-// Uso: node backup/validacao-dashboard.js criar | esperado | limpar
+// Uso: node backup/validacao-dashboard.js criar | esperado | comparar | limpar
 // Cria uma empresa de TESTE isolada com um cenário controlado, imprime os valores
 // esperados do dashboard (calculados por SQL, independente do código do app) e
 // depois remove tudo. Não toca em dados de nenhuma outra empresa.
 // O cenário inclui um contrato CANCELADO com parcela pendente (que não pode entrar em
 // valores futuros) e um contrato ATIVO com parcela pendente; `esperado` confere isso e
-// sai com código 1 se alguma verificação do cenário falhar.
+// sai com código 1 se alguma verificação do cenário falhar. `comparar` entra no app (precisa do
+// servidor em APP_URL, padrão http://localhost:3000) e confere Dashboard (4 períodos) e Financeiro
+// contra esses valores esperados.
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env.novo'), quiet: true });
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const { Client } = require('pg');
+const { abrirSessao, cartoesDashboard, cartoesFinanceiro } = require('./lib-app-validacao');
 
 const ESTADO = path.join(os.tmpdir(), 'validacao-dashboard.json');
 const admin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
@@ -90,7 +93,7 @@ async function criar() {
 
 function mais(data, n) { const [a, m, d] = data.split('-').map(Number); return new Date(Date.UTC(a, m - 1, d + n)).toISOString().slice(0, 10); }
 
-async function esperado() {
+async function esperado(silencioso = false) {
   const { uid, hoje, empresaId } = JSON.parse(fs.readFileSync(ESTADO, 'utf8'));
   const [a, m] = hoje.split('-').map(Number);
   const ini = (ano, mes) => new Date(Date.UTC(ano, mes - 1, 1)).toISOString().slice(0, 10);
@@ -155,11 +158,43 @@ async function esperado() {
     '4b. Os 50 recebidos no contrato cancelado permanecem no histórico': num(recebidoDoCancelado) === 50,
   };
   const armadilha = { aReceberSeContarCancelado: String(num(fixos.aReceber.v) + num(k9?.saldo ?? 0)), emAtrasoSeContarCancelado: String(num(fixos.emAtraso.v) + 100) };
-  console.log(JSON.stringify({ hoje, fixos, porPeriodo, contratos, recebidoTotal, recebidoDoCancelado, armadilha, verificacoes }, null, 1));
+  if (!silencioso) console.log(JSON.stringify({ hoje, fixos, porPeriodo, contratos, recebidoTotal, recebidoDoCancelado, armadilha, verificacoes }, null, 1));
   const falhas = Object.entries(verificacoes).filter(([, ok]) => !ok).map(([k]) => k);
   if (falhas.length) { console.error('VERIFICAÇÕES COM FALHA:\n- ' + falhas.join('\n- ')); process.exit(1); }
-  console.log('TODAS AS VERIFICAÇÕES DO CENÁRIO OK');
+  if (!silencioso) console.log('TODAS AS VERIFICAÇÕES DO CENÁRIO OK');
   void uid;
+  return { hoje, fixos, porPeriodo, recebidoTotal };
+}
+
+// Entra no app como o usuário de teste e compara o que Dashboard e Financeiro MOSTRAM com o
+// esperado por SQL: recebido, a receber, em atraso, próximos vencimentos e contratos ativos.
+async function comparar() {
+  const { email } = JSON.parse(fs.readFileSync(ESTADO, 'utf8'));
+  const esp = await esperado(true);
+  const get = await abrirSessao(email);
+  const falhas = [];
+  const igual = (a, b) => Math.abs(a - b) < 0.005;
+  const confere = (desc, ok, detalhe = '') => { console.log(`${ok ? '  OK ' : '  FALHA'}: ${desc}${ok ? '' : ' ' + detalhe}`); if (!ok) falhas.push(desc); };
+
+  const fin = cartoesFinanceiro(await get('/financeiro'));
+  console.log('== Financeiro ==');
+  confere(`A receber ${fin.aReceber} (${fin.qtdAReceber} parcelas) = ${esp.fixos.aReceber.v} (${esp.fixos.aReceber.n})`, igual(fin.aReceber, Number(esp.fixos.aReceber.v)) && fin.qtdAReceber === esp.fixos.aReceber.n);
+  confere(`Em atraso ${fin.emAtraso} (${fin.qtdEmAtraso}) = ${esp.fixos.emAtraso.v} (${esp.fixos.emAtraso.n})`, igual(fin.emAtraso, Number(esp.fixos.emAtraso.v)) && fin.qtdEmAtraso === esp.fixos.emAtraso.n);
+  confere(`Recebido ${fin.recebido} = ${esp.recebidoTotal} (todos os recebimentos, inclusive de contrato cancelado)`, igual(fin.recebido, Number(esp.recebidoTotal)));
+
+  for (const [nome, e] of Object.entries(esp.porPeriodo)) {
+    const rota = nome === 'personalizado' ? `/dashboard?periodo=personalizado&de=${e.de}&ate=${e.ate}` : `/dashboard?periodo=${nome}`;
+    const d = cartoesDashboard(await get(rota));
+    console.log(`== Dashboard: ${nome} (${e.de} a ${e.ate}) ==`);
+    confere(`Recebido no período ${d.recebidoPeriodo} = ${e.recebido}`, igual(d.recebidoPeriodo, Number(e.recebido)));
+    confere(`Próximos vencimentos ${d.proximos} (${d.qtdProximos}) = ${e.proximosVencimentos.v} (${e.proximosVencimentos.n})`, igual(d.proximos, Number(e.proximosVencimentos.v)) && d.qtdProximos === e.proximosVencimentos.n);
+    confere(`A receber ${d.aReceber} (${d.qtdAReceber}) = ${esp.fixos.aReceber.v} (${esp.fixos.aReceber.n}) e igual ao Financeiro`, igual(d.aReceber, Number(esp.fixos.aReceber.v)) && d.qtdAReceber === esp.fixos.aReceber.n && igual(d.aReceber, fin.aReceber));
+    confere(`Em atraso ${d.emAtraso} (${d.qtdEmAtraso}) = ${esp.fixos.emAtraso.v} (${esp.fixos.emAtraso.n}) e igual ao Financeiro`, igual(d.emAtraso, Number(esp.fixos.emAtraso.v)) && d.qtdEmAtraso === esp.fixos.emAtraso.n && igual(d.emAtraso, fin.emAtraso));
+    confere(`Contratos ativos ${d.contratosAtivos} = ${esp.fixos.contratosAtivos}`, d.contratosAtivos === esp.fixos.contratosAtivos);
+    confere(`Resumo: recebido total ${d.resumoRecebido} = ${esp.recebidoTotal}; em atraso ${d.resumoAtraso}`, igual(d.resumoRecebido, Number(esp.recebidoTotal)) && igual(d.resumoAtraso, Number(esp.fixos.emAtraso.v)));
+  }
+  if (falhas.length) { console.error(`\n${falhas.length} COMPARAÇÃO(ÕES) COM FALHA`); process.exit(1); }
+  console.log('\nDASHBOARD E FINANCEIRO CONFEREM COM O ESPERADO');
 }
 
 async function limpar() {
@@ -174,4 +209,4 @@ async function limpar() {
 }
 
 const modo = process.argv[2];
-({ criar, esperado, limpar }[modo] || (() => { console.log('uso: criar | esperado | limpar'); }))().catch((e) => { console.error('ERRO', e.message); process.exit(1); });
+({ criar, esperado, comparar, limpar }[modo] || (() => { console.log('uso: criar | esperado | comparar | limpar'); return Promise.resolve(); }))().catch((e) => { console.error('ERRO', e.message); process.exit(1); });

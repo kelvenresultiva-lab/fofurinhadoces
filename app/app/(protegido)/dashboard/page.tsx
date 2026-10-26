@@ -4,11 +4,17 @@ import { formatarDataBR, hojeISO } from '../eventos/datas'
 import { labelTipo, labelStatusEvento, classesStatus } from '../eventos/opcoes'
 import { labelStatusOrcamento, classesStatusOrcamento } from '../orcamentos/opcoes'
 import { labelStatusParcela, classesStatusParcela } from '../contratos/opcoes'
-import { ehVencida, saldoParcela } from '../financeiro/calculos'
+import {
+  ehVencida,
+  parcelasEmAberto,
+  resumoFuturo,
+  saldoParcela,
+  saldoTotal,
+  totalRecebido,
+  vencendoEntre,
+} from '../financeiro/calculos'
 import { PERIODOS, resolverPeriodo, ultimosMeses } from './periodo'
 import { BarraEmpilhada, CardIndicador, GraficoBarras, Secao, Vazio, formatarBRL } from './widgets'
-
-const soma = (valores: number[]) => valores.reduce((total, v) => total + v, 0)
 
 export default async function DashboardPage({
   searchParams,
@@ -51,28 +57,21 @@ export default async function DashboardPage({
   const eventosFuturos = eventosR.data ?? []
   const orcamentosAtencao = orcamentosR.data ?? []
 
-  // Parcelas em aberto = não canceladas, de contratos não cancelados, com saldo restante.
-  // Nunca o valor integral de parcela parcial. Recebimentos já realizados (mais abaixo)
-  // continuam contando no histórico mesmo que o contrato seja cancelado depois.
-  const contratosCancelados = new Set(contratos.filter((c) => c.status === 'cancelado').map((c) => c.id))
-  const abertas = parcelas.filter(
-    (p) => p.status !== 'cancelado' && !contratosCancelados.has(p.contrato_id) && saldoParcela(p) > 0
-  )
-  const vencidas = abertas.filter((p) => ehVencida(p.vencimento, saldoParcela(p), p.status))
-  const venceNoPeriodo = abertas.filter((p) => p.vencimento >= periodo.inicio && p.vencimento <= periodo.fim)
+  // Valores futuros: regra única em financeiro/calculos.ts (parcela e contrato não cancelados,
+  // só o saldo restante). Os recebimentos abaixo NÃO passam por ela: o histórico de "recebido"
+  // permanece íntegro mesmo que o contrato seja cancelado depois.
+  const abertas = parcelasEmAberto(parcelas, contratos)
+  const futuro = resumoFuturo(abertas, hoje)
+  const venceNoPeriodo = vencendoEntre(abertas, periodo.inicio, periodo.fim)
+  const { aReceber, emAtraso } = futuro
+  const proximosVencimentos = saldoTotal(venceNoPeriodo)
 
-  const aReceber = soma(abertas.map(saldoParcela))
-  const emAtraso = soma(vencidas.map(saldoParcela))
-  const proximosVencimentos = soma(venceNoPeriodo.map(saldoParcela))
-
-  const recebidoPeriodo = soma(
-    recebimentos.filter((r) => r.data >= periodo.inicio && r.data <= periodo.fim).map((r) => Number(r.valor))
-  )
-  const recebidoTotal = soma(recebimentos.map((r) => Number(r.valor)))
+  const recebidoPeriodo = totalRecebido(recebimentos.filter((r) => r.data >= periodo.inicio && r.data <= periodo.fim))
+  const recebidoTotal = totalRecebido(recebimentos)
   const recebidoPorMes = meses.map((m) => ({
     label: m.label,
     atual: m.chave === hoje.slice(0, 7),
-    valor: soma(recebimentos.filter((r) => r.data.startsWith(m.chave)).map((r) => Number(r.valor))),
+    valor: totalRecebido(recebimentos.filter((r) => r.data.startsWith(m.chave))),
   }))
 
   const contratosComSaldo = new Set(abertas.map((p) => p.contrato_id))
@@ -157,7 +156,7 @@ export default async function DashboardPage({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <CardIndicador titulo="Recebido no período" valor={formatarBRL(recebidoPeriodo)} tom="verde" detalhe="Pagamentos registrados nas datas do período" />
         <CardIndicador titulo="A receber" valor={formatarBRL(aReceber)} tom="roxo" detalhe={`${abertas.length} parcela(s) em aberto (saldo restante)`} />
-        <CardIndicador titulo="Em atraso" valor={formatarBRL(emAtraso)} tom="vermelho" detalhe={`${vencidas.length} parcela(s) vencida(s)`} />
+        <CardIndicador titulo="Em atraso" valor={formatarBRL(emAtraso)} tom="vermelho" detalhe={`${futuro.qtdEmAtraso} parcela(s) vencida(s)`} />
         <CardIndicador titulo="Próximos vencimentos" valor={formatarBRL(proximosVencimentos)} tom="roxo" detalhe={`${venceNoPeriodo.length} parcela(s) vencendo no período`} />
         <CardIndicador titulo="Contratos ativos" valor={String(contratosAtivos)} detalhe="Ativos e com saldo a receber" />
         <CardIndicador titulo="Orçamentos em negociação" valor={String(totalOrcamentosAtencao)} detalhe="Enviados ou em negociação" />
@@ -174,7 +173,7 @@ export default async function DashboardPage({
           <BarraEmpilhada
             partes={[
               { label: 'Recebido (total)', valor: recebidoTotal, cor: 'bg-green-500', texto: 'text-green-700' },
-              { label: 'A receber no prazo', valor: Math.max(aReceber - emAtraso, 0), cor: 'bg-indigo-500', texto: 'text-indigo-700' },
+              { label: 'A receber no prazo', valor: futuro.aVencer, cor: 'bg-indigo-500', texto: 'text-indigo-700' },
               { label: 'Em atraso', valor: emAtraso, cor: 'bg-red-500', texto: 'text-red-700' },
             ]}
           />
