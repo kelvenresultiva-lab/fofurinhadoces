@@ -43,7 +43,7 @@ Isolamento por RLS no Postgres, via `current_empresa_id()` (lê `usuarios.empres
 | Módulo | Status | O que faz |
 |---|---|---|
 | Autenticação/cadastro | PRONTO | cadastro self-service, login, logout, confirmação de e-mail |
-| Dashboard | PARCIAL | só o total de clientes |
+| Dashboard | PRONTO | filtro de período (este mês, mês anterior, próximos 30 dias, personalizado), 8 cards, gráfico de recebimentos dos últimos 6 meses, resumo financeiro, próximos vencimentos, próximos eventos e orçamentos em negociação |
 | Clientes | PRONTO | lista, busca, criar, editar, inativar/reativar; ficha com eventos do cliente |
 | Produtos | PRONTO | catálogo com preço em R$ (decimal exato), unidade, categoria, antecedência; busca, inativar/reativar |
 | Eventos | PRONTO | tipo e status do banco, data civil sem fuso, filtros próximos/passados, busca; mostra orçamentos e contrato |
@@ -116,7 +116,7 @@ Não existe `supabase/migrations/` nem migrations numeradas. O histórico é um 
 - `rpc_criar_empresa_usuario.sql`.
 - `fix_orcamento_itens_cross_tenant.sql`, `fix_orcamentos_cross_tenant.sql`, `fix_contrato_itens_cross_tenant.sql`: três brechas de isolamento entre empresas, achadas em teste e corrigidas (a policy não validava `produto_id`, `cliente_id`/`evento_id`).
 - `rpc_registrar_recebimento.sql`.
-- Scripts: `apply-sql.js`, `apply-migration.js`, `regressao-completa.js` (regressão do banco: policies, fluxo completo e isolamento; cria e apaga duas empresas de teste), `test-rpc-atomicidade.js`, `export-all.js`, `gerar-migration.js`, `test-connection.js`.
+- Scripts: `apply-sql.js`, `apply-migration.js`, `validacao-dashboard.js` (cria uma empresa de teste com cenário controlado, imprime os valores esperados do dashboard calculados por SQL e remove tudo), `regressao-completa.js` (regressão do banco: policies, fluxo completo e isolamento; cria e apaga duas empresas de teste), `test-rpc-atomicidade.js`, `export-all.js`, `gerar-migration.js`, `test-connection.js`.
 
 ## 17. Segurança implementada
 
@@ -126,11 +126,11 @@ RLS em todas as tabelas de negócio com `WITH CHECK` validando todas as referên
 
 - `tsc --noEmit`, `lint` e `build` passam (21 rotas, todas dinâmicas exceto `_not-found` e `/cadastro/verifique-email`).
 - Não há deploy. O app roda local com `npm run dev` na porta 3000.
-- Faltam: campo `engines` no `package.json`, headers de segurança e limites de upload no `next.config.ts`, tratamento de fuso do Brasil (datas civis são tratadas como texto; "hoje" usa o horário do servidor), testes automatizados.
+- Faltam: campo `engines` no `package.json`, headers de segurança e limites de upload no `next.config.ts`, testes automatizados. Datas civis são tratadas como texto e "hoje" usa o fuso America/Sao_Paulo (`hojeISO`).
 
 ## 19. Pendências reais
 
-Dashboard completo; Produção; Agenda; PDF de orçamento e contrato; estorno, edição e exclusão de recebimento; cancelamento de contrato e de parcela (existe no banco, sem tela); documentos/upload; relatórios; despesas e contas a pagar; equipe, cargos e permissões; auditoria; configurações da empresa; recuperação de senha; importar (ou descartar) os dados reais do projeto antigo, que estão exportados em `backup/data/` (fora do Git, contêm dados pessoais).
+Produção; Agenda; PDF de orçamento e contrato; estorno, edição e exclusão de recebimento; cancelamento de contrato e de parcela (existe no banco, sem tela); documentos/upload; relatórios; despesas e contas a pagar; equipe, cargos e permissões; auditoria; configurações da empresa; recuperação de senha; importar (ou descartar) os dados reais do projeto antigo, que estão exportados em `backup/data/` (fora do Git, contêm dados pessoais).
 
 ## 20. Último ponto do desenvolvimento
 
@@ -138,10 +138,9 @@ Redesign visual (menu lateral, barra superior, tema claro, fonte Inter, página 
 
 ## 21. Próximo passo recomendado
 
-1. Dashboard com os números que já existem (financeiro e contratos).
-2. Estorno de recebimento (fecha o Financeiro).
-3. Produção.
-4. PDF de orçamento e contrato.
+1. Estorno de recebimento (fecha o Financeiro).
+2. Produção.
+3. PDF de orçamento e contrato.
 5. Antes de publicar: headers de segurança, `engines` e atualizar o `.env.novo`.
 
 ## Git

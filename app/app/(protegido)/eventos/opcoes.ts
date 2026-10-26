@@ -20,6 +20,10 @@ export const STATUS_EVENTO = [
 export type TipoEvento = (typeof TIPOS_EVENTO)[number]['value']
 export type StatusEvento = (typeof STATUS_EVENTO)[number]['value']
 
+export function labelStatusEvento(status: string): string {
+  return STATUS_EVENTO.find((s) => s.value === status)?.label ?? status
+}
+
 export function labelTipo(tipo: string): string {
   return TIPOS_EVENTO.find((t) => t.value === tipo)?.label ?? tipo
 }

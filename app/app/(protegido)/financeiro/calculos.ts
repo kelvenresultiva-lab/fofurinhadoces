@@ -1,5 +1,9 @@
 import { hojeISO } from '../eventos/datas'
 
+export function saldoParcela(parcela: { valor: number | string; valor_pago: number | string }): number {
+  return Number(parcela.valor) - Number(parcela.valor_pago)
+}
+
 // "Vencida" não é um valor de parcelas.status — é derivado (o schema não tem essa
 // coluna). Comparação em string 'AAAA-MM-DD' (sem construir Date) evita qualquer
 // deslocamento de fuso horário.

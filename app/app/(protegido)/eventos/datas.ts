@@ -15,10 +15,13 @@ export function formatarHorarioInput(horario: string | null | undefined): string
   return horario.slice(0, 5)
 }
 
+// "Hoje" sempre no fuso do negócio (America/Sao_Paulo), independente do fuso do servidor.
+// en-CA formata como AAAA-MM-DD.
 export function hojeISO(): string {
-  const agora = new Date()
-  const ano = agora.getFullYear()
-  const mes = String(agora.getMonth() + 1).padStart(2, '0')
-  const dia = String(agora.getDate()).padStart(2, '0')
-  return `${ano}-${mes}-${dia}`
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
 }
