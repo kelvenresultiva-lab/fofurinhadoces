@@ -43,7 +43,7 @@ Isolamento por RLS no Postgres, via `current_empresa_id()` (lê `usuarios.empres
 | Módulo | Status | O que faz |
 |---|---|---|
 | Autenticação/cadastro | PRONTO | cadastro self-service, login, logout, confirmação de e-mail |
-| Dashboard | PRONTO | filtro de período (este mês, mês anterior, próximos 30 dias, personalizado), 8 cards, gráfico de recebimentos dos últimos 6 meses, resumo financeiro, próximos vencimentos, próximos eventos e orçamentos em negociação |
+| Dashboard | PRONTO | filtro de período (este mês, mês anterior, próximos 30 dias, personalizado), 8 cards, gráfico de recebimentos dos últimos 6 meses, resumo financeiro, próximos vencimentos, próximos eventos e orçamentos em negociação. Regra: parcelas de contrato cancelado (mesmo sem a parcela estar cancelada) ficam fora de A receber, Em atraso, Próximos vencimentos, lista e resumo; "Recebido" continua vindo dos recebimentos registrados, inclusive de contratos cancelados depois. A página `/financeiro` ainda NÃO aplica essa exclusão (só ignora parcela cancelada) |
 | Clientes | PRONTO | lista, busca, criar, editar, inativar/reativar; ficha com eventos do cliente |
 | Produtos | PRONTO | catálogo com preço em R$ (decimal exato), unidade, categoria, antecedência; busca, inativar/reativar |
 | Eventos | PRONTO | tipo e status do banco, data civil sem fuso, filtros próximos/passados, busca; mostra orçamentos e contrato |

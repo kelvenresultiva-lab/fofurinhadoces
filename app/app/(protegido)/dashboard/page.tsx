@@ -51,8 +51,13 @@ export default async function DashboardPage({
   const eventosFuturos = eventosR.data ?? []
   const orcamentosAtencao = orcamentosR.data ?? []
 
-  // Parcelas em aberto = não canceladas com saldo restante. Nunca o valor integral de parcela parcial.
-  const abertas = parcelas.filter((p) => p.status !== 'cancelado' && saldoParcela(p) > 0)
+  // Parcelas em aberto = não canceladas, de contratos não cancelados, com saldo restante.
+  // Nunca o valor integral de parcela parcial. Recebimentos já realizados (mais abaixo)
+  // continuam contando no histórico mesmo que o contrato seja cancelado depois.
+  const contratosCancelados = new Set(contratos.filter((c) => c.status === 'cancelado').map((c) => c.id))
+  const abertas = parcelas.filter(
+    (p) => p.status !== 'cancelado' && !contratosCancelados.has(p.contrato_id) && saldoParcela(p) > 0
+  )
   const vencidas = abertas.filter((p) => ehVencida(p.vencimento, saldoParcela(p), p.status))
   const venceNoPeriodo = abertas.filter((p) => p.vencimento >= periodo.inicio && p.vencimento <= periodo.fim)
 
