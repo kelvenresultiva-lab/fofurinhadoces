@@ -19,11 +19,15 @@ export default async function ProtegidoLayout({
   // Usuário e empresa numa consulta só (relação usuarios.empresa_id -> empresas).
   const { data: usuario } = await supabase
     .from('usuarios')
-    .select('nome, cargo, empresas(nome)')
+    .select('nome, cargo, empresas(nome, nome_fantasia, logo)')
     .eq('id', user.sub)
     .maybeSingle()
-  const empresa = usuario?.empresas as { nome: string } | { nome: string }[] | null | undefined
-  const nomeEmpresa = (Array.isArray(empresa) ? empresa[0]?.nome : empresa?.nome) ?? 'Fofurinha Doces'
+  type EmpresaMenu = { nome: string; nome_fantasia: string | null; logo: string | null }
+  const embutida = usuario?.empresas as EmpresaMenu | EmpresaMenu[] | null | undefined
+  const empresa = Array.isArray(embutida) ? embutida[0] : embutida
+  // Menu mostra o nome fantasia (ou a razão social) e a logo, quando houver; sem logo, a identidade padrão.
+  const nomeEmpresa = empresa?.nome_fantasia || empresa?.nome || 'Fofurinha Doces'
+  const logoUrl = empresa?.logo ? `/configuracoes/logo?v=${encodeURIComponent(empresa.logo)}` : null
 
   const iniciais = (usuario?.nome ?? user.email ?? '?')
     .split(' ')
@@ -34,7 +38,7 @@ export default async function ProtegidoLayout({
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[#f8f9fc] lg:flex-row">
-      <Sidebar nomeEmpresa={nomeEmpresa} />
+      <Sidebar nomeEmpresa={nomeEmpresa} logoUrl={logoUrl} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-end gap-3 border-b border-black/[.06] bg-white px-6 py-3 dark:border-white/[.1] dark:bg-zinc-950">

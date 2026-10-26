@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -15,6 +16,7 @@ import {
   Menu,
   Package,
   Receipt,
+  Settings,
   Target,
   Users,
   X,
@@ -64,10 +66,15 @@ const classeItem = (ativo: boolean) =>
 const classeSair =
   'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]'
 
-function Marca({ nomeEmpresa }: { nomeEmpresa: string }) {
+// Com logo cadastrada (Configurações), ela substitui o coração da identidade padrão.
+function Marca({ nomeEmpresa, logoUrl }: { nomeEmpresa: string; logoUrl: string | null }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <Heart className="h-6 w-6 shrink-0 text-indigo-600" />
+      {logoUrl ? (
+        <Image src={logoUrl} alt={`Logo de ${nomeEmpresa}`} width={36} height={36} unoptimized className="h-9 w-9 shrink-0 rounded-lg object-contain" />
+      ) : (
+        <Heart className="h-6 w-6 shrink-0 text-indigo-600" />
+      )}
       <div className="min-w-0 leading-tight">
         <p className="break-words text-base font-semibold text-zinc-950 dark:text-zinc-50">{nomeEmpresa}</p>
         <p className="text-xs text-indigo-600">Financeiro</p>
@@ -98,7 +105,26 @@ function Secoes({ pathname, aoNavegar }: { pathname: string; aoNavegar?: () => v
   )
 }
 
-export function Sidebar({ nomeEmpresa }: { nomeEmpresa: string }) {
+// Parte de baixo do menu: Configurações logo acima de Sair (sem criar uma seção nova).
+function Rodape({ pathname, aoNavegar }: { pathname: string; aoNavegar?: () => void }) {
+  const ativo = pathname === '/configuracoes' || pathname.startsWith('/configuracoes/')
+  return (
+    <div className="mt-4 flex flex-col gap-0.5 border-t border-black/[.06] pt-3 dark:border-white/[.1]">
+      <Link href="/configuracoes" onClick={aoNavegar} aria-current={ativo ? 'page' : undefined} className={classeItem(ativo)}>
+        <Settings className="h-[18px] w-[18px]" />
+        Configurações
+      </Link>
+      <form action={logout}>
+        <button type="submit" className={classeSair}>
+          <LogOut className="h-[18px] w-[18px]" />
+          Sair
+        </button>
+      </form>
+    </div>
+  )
+}
+
+export function Sidebar({ nomeEmpresa, logoUrl }: { nomeEmpresa: string; logoUrl: string | null }) {
   const pathname = usePathname()
   const [aberto, setAberto] = useState(false)
 
@@ -113,25 +139,20 @@ export function Sidebar({ nomeEmpresa }: { nomeEmpresa: string }) {
     <>
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col self-start overflow-y-auto border-r border-black/[.06] bg-white px-3 py-5 lg:flex dark:border-white/[.1] dark:bg-zinc-950">
         <div className="mb-5 px-3">
-          <Marca nomeEmpresa={nomeEmpresa} />
+          <Marca nomeEmpresa={nomeEmpresa} logoUrl={logoUrl} />
         </div>
 
         <nav aria-label="Menu principal" className="flex flex-1 flex-col">
           <Secoes pathname={pathname} />
         </nav>
 
-        <form action={logout} className="mt-4 border-t border-black/[.06] pt-3 dark:border-white/[.1]">
-          <button type="submit" className={classeSair}>
-            <LogOut className="h-[18px] w-[18px]" />
-            Sair
-          </button>
-        </form>
+        <Rodape pathname={pathname} />
       </aside>
 
       {/* Celular e tablet: barra com botão Menu; o painel abre abaixo, com rolagem vertical própria. */}
       <div className="border-b border-black/[.06] bg-white lg:hidden dark:border-white/[.1] dark:bg-zinc-950">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <Marca nomeEmpresa={nomeEmpresa} />
+          <Marca nomeEmpresa={nomeEmpresa} logoUrl={logoUrl} />
           <button
             type="button"
             onClick={() => setAberto((v) => !v)}
@@ -151,12 +172,7 @@ export function Sidebar({ nomeEmpresa }: { nomeEmpresa: string }) {
             className="flex max-h-[calc(100dvh-4rem)] flex-col overflow-y-auto overscroll-contain border-t border-black/[.06] px-3 py-3 dark:border-white/[.1]"
           >
             <Secoes pathname={pathname} aoNavegar={() => setAberto(false)} />
-            <form action={logout} className="mt-4 border-t border-black/[.06] pt-3 dark:border-white/[.1]">
-              <button type="submit" className={classeSair}>
-                <LogOut className="h-[18px] w-[18px]" />
-                Sair
-              </button>
-            </form>
+            <Rodape pathname={pathname} aoNavegar={() => setAberto(false)} />
           </nav>
         )}
       </div>
