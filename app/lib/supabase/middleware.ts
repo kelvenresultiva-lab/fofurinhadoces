@@ -3,12 +3,37 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PUBLIC_PATHS = ['/login', '/cadastro', '/auth/confirm']
 
+// Resposta de erro legível (sem stack nem valores de configuração): na hospedagem, um 500 em branco
+// não diz nada; o detalhe técnico vai para o log do servidor.
+function erroDeConfiguracao(mensagem: string) {
+  return new NextResponse(mensagem, { status: 500, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+}
+
 export async function updateSession(request: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const faltando = [!url && 'NEXT_PUBLIC_SUPABASE_URL', !chave && 'NEXT_PUBLIC_SUPABASE_ANON_KEY'].filter(Boolean)
+  if (faltando.length > 0) {
+    console.error(`[proxy] variáveis de ambiente ausentes: ${faltando.join(', ')}`)
+    return erroDeConfiguracao(
+      `Configuração do servidor incompleta: faltam as variáveis ${faltando.join(' e ')}. Cadastre-as na hospedagem e faça um novo deploy.`
+    )
+  }
+
+  try {
+    return await atualizarSessao(request, url!, chave!)
+  } catch (erro) {
+    console.error('[proxy] falha ao validar a sessão:', erro)
+    return erroDeConfiguracao('Não foi possível validar a sessão (falha ao falar com o Supabase). Veja o log do servidor.')
+  }
+}
+
+async function atualizarSessao(request: NextRequest, supabaseUrl: string, supabaseChave: string) {
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseChave,
     {
       cookies: {
         getAll() {
