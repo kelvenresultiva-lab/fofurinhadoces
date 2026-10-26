@@ -11,9 +11,21 @@ import { normalizarPreco } from '../produtos/preco'
 export async function registrarRecebimento(parcelaId: string, contratoId: string, formData: FormData) {
   const supabase = await createClient()
 
+  // Quem abre o formulário pela listagem de Parcelas volta para ela (com busca/filtros preservados);
+  // qualquer outro valor cai na página do contrato. Só aceitamos caminhos de /parcelas.
+  const retornoParam = String(formData.get('retorno') ?? '')
+  const retorno = /^\/parcelas(\?[^#]*)?$/.test(retornoParam) ? retornoParam : `/contratos/${contratoId}`
+  const destino = (chave: 'erro' | 'sucesso', mensagem: string) => {
+    const url = new URL(retorno, 'http://local')
+    url.searchParams.delete('erro')
+    url.searchParams.delete('sucesso')
+    url.searchParams.set(chave, mensagem)
+    return `${url.pathname}${url.search}`
+  }
+
   const valorNormalizado = normalizarPreco(String(formData.get('valor') ?? ''))
   if (!valorNormalizado.ok || !valorNormalizado.valor) {
-    redirect(`/contratos/${contratoId}?erro=${encodeURIComponent('Informe um valor válido para o recebimento.')}`)
+    redirect(destino('erro', 'Informe um valor válido para o recebimento.'))
   }
 
   const data = String(formData.get('data') ?? '').trim() || null
@@ -29,10 +41,11 @@ export async function registrarRecebimento(parcelaId: string, contratoId: string
   })
 
   if (error) {
-    redirect(`/contratos/${contratoId}?erro=${encodeURIComponent(error.message)}`)
+    redirect(destino('erro', error.message))
   }
 
   revalidatePath(`/contratos/${contratoId}`)
   revalidatePath('/financeiro')
-  redirect(`/contratos/${contratoId}?sucesso=${encodeURIComponent('Recebimento registrado com sucesso.')}`)
+  revalidatePath('/parcelas')
+  redirect(destino('sucesso', 'Recebimento registrado com sucesso.'))
 }

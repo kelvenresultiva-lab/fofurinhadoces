@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  Receipt,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -21,6 +22,7 @@ const ITENS = [
   { href: '/eventos', label: 'Eventos', icone: CalendarDays },
   { href: '/orcamentos', label: 'Orçamentos', icone: FileText },
   { href: '/contratos', label: 'Contratos', icone: FileSignature },
+  { href: '/parcelas', label: 'Parcelas', icone: Receipt },
   { href: '/financeiro', label: 'Financeiro', icone: Wallet },
   { href: '/produtos', label: 'Produtos', icone: Package },
 ]

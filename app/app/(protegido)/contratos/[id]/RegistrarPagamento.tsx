@@ -5,7 +5,7 @@ import { registrarRecebimento } from '../../financeiro/actions'
 import { FORMAS_PAGAMENTO } from '../opcoes'
 
 const BOTOES = {
-  linha: 'rounded-lg border border-black/[.1] bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50',
+  linha: 'whitespace-nowrap rounded-lg border border-black/[.1] bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50',
   principal: 'inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700',
   cabecalho: 'inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700',
 } as const
@@ -23,6 +23,7 @@ export default function RegistrarPagamento({
   saldo,
   variante,
   texto = 'Registrar pagamento',
+  retorno,
 }: {
   parcelaId: string
   instancia: string
@@ -31,6 +32,8 @@ export default function RegistrarPagamento({
   saldo: string
   variante: keyof typeof BOTOES
   texto?: string
+  // Página para onde a Server Action volta (hoje só /parcelas); sem ele, volta ao contrato.
+  retorno?: string
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
   const uid = `${instancia}-${parcelaId}`
@@ -60,6 +63,7 @@ export default function RegistrarPagamento({
         className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-black/[.06] bg-white p-0 text-zinc-950 shadow-xl backdrop:bg-black/40"
       >
         <form action={acao} className="flex flex-col gap-4 p-6">
+          {retorno && <input type="hidden" name="retorno" value={retorno} />}
           <div>
             <h2 id={`titulo-pagamento-${uid}`} className="text-lg font-semibold">
               Registrar pagamento
