@@ -22,7 +22,7 @@ function partes(data: string) {
   return { ano, mes, dia }
 }
 
-function dataValida(data: string | undefined): data is string {
+export function dataValida(data: string | undefined): data is string {
   if (!data || !/^\d{4}-\d{2}-\d{2}$/.test(data)) return false
   const { ano, mes, dia } = partes(data)
   return iso(ano, mes, dia) === data
@@ -77,12 +77,36 @@ export function resolverPeriodoRecebimentos(
 ): { chave: ChavePeriodoRecebimentos; inicio: string; fim: string; erro?: string } {
   const hoje = hojeISO()
   if (chave === 'ultimos30') return { chave: 'ultimos30', inicio: somarDias(hoje, -29), fim: hoje }
-  if (chave === 'ano') {
-    const { ano } = partes(hoje)
-    return { chave: 'ano', inicio: iso(ano, 1, 1), fim: iso(ano, 12, 31) }
-  }
+  if (chave === 'ano') return { chave: 'ano', ...anoAtual() }
   const p = resolverPeriodo(chave === 'proximos30' ? undefined : chave, de, ate)
   return { ...p, chave: p.chave === 'proximos30' ? 'mes' : p.chave }
+}
+
+// Despesas olham para os vencimentos: os períodos do Dashboard (inclui "Próximos 30 dias") mais
+// "Este ano".
+export type ChavePeriodoDespesas = ChavePeriodo | 'ano'
+
+export const PERIODOS_DESPESAS: { value: ChavePeriodoDespesas; label: string }[] = [
+  { value: 'mes', label: 'Este mês' },
+  { value: 'anterior', label: 'Mês anterior' },
+  { value: 'proximos30', label: 'Próximos 30 dias' },
+  { value: 'ano', label: 'Este ano' },
+  { value: 'personalizado', label: 'Período personalizado' },
+]
+
+export function resolverPeriodoDespesas(
+  chave: string | undefined,
+  de: string | undefined,
+  ate: string | undefined
+): { chave: ChavePeriodoDespesas; inicio: string; fim: string; erro?: string } {
+  if (chave === 'ano') return { chave: 'ano', ...anoAtual() }
+  return resolverPeriodo(chave, de, ate)
+}
+
+// Ano corrente inteiro (fuso America/Sao_Paulo).
+function anoAtual() {
+  const { ano } = partes(hojeISO())
+  return { inicio: iso(ano, 1, 1), fim: iso(ano, 12, 31) }
 }
 
 // Mês corrente (fuso America/Sao_Paulo), para o card "Recebido neste mês".

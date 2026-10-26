@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  BanknoteArrowDown,
   CalendarDays,
   FileSignature,
   FileText,
@@ -25,6 +26,7 @@ const ITENS = [
   { href: '/contratos', label: 'Contratos', icone: FileSignature },
   { href: '/parcelas', label: 'Parcelas', icone: Receipt },
   { href: '/recebimentos', label: 'Recebimentos', icone: HandCoins },
+  { href: '/despesas', label: 'Despesas', icone: BanknoteArrowDown },
   { href: '/financeiro', label: 'Financeiro', icone: Wallet },
   { href: '/produtos', label: 'Produtos', icone: Package },
 ]
