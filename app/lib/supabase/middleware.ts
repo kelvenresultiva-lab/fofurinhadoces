@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/cadastro', '/auth/confirm']
+// /api/keep-alive: chamada diária do cron da Vercel, sem sessão (ver app/api/keep-alive/route.ts).
+const PUBLIC_PATHS = ['/login', '/cadastro', '/auth/confirm', '/api/keep-alive']
 
 // Resposta de erro legível (sem stack nem valores de configuração): na hospedagem, um 500 em branco
 // não diz nada; o detalhe técnico vai para o log do servidor.
